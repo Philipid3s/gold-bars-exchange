@@ -43,7 +43,7 @@
 		"redux": "^3.7.2",
 		"redux-api": "^0.11.1",
 		"redux-thunk": "^2.2.0",
-		"web3": "^1.0.0-beta.48"
+		"web3": "1.0.0-beta.37"
 	},
 	"devDependencies": {
 		"babel-eslint": "^10.0.1",
