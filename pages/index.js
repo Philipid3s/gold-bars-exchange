@@ -26,8 +26,11 @@ class IndexPage extends Component {
 
   async loadBlockchainData() {
     const web3 = new Web3(Web3.givenProvider);
+    console.log(web3);
 
     const accounts = await web3.eth.getAccounts();
+    console.log(accounts);
+    
     const isLoggedIn = (accounts.length > 0);
     if (isLoggedIn) {
       this.setState({ isLoggedIn: isLoggedIn, account: accounts[0], etherscan: "https://ropsten.etherscan.io/address/" +  accounts[0]});
