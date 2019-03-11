@@ -72,6 +72,8 @@ class IndexPage extends Component {
 
     if (typeof web3 !== 'undefined') {
 
+      console.log(window.web3.eth.defaultAccount );
+      
       web3.eth.getAccounts( (error, accounts) => 
         {
           if (error)
