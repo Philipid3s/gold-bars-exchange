@@ -50,7 +50,8 @@ class IndexPage extends Component {
     }
   }
 
-  componentWillMount() {
+  componentDidMount() {
+    
     this.loadBlockchainData()
   }
 
