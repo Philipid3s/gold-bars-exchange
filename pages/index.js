@@ -25,15 +25,28 @@ class IndexPage extends Component {
   }
 
   async loadBlockchainData() {
-    const web3 = new Web3(Web3.givenProvider);
-    console.log(web3);
 
-    const accounts = await web3.eth.getAccounts();
-    console.log(accounts);
-    
-    const isLoggedIn = (accounts.length > 0);
-    if (isLoggedIn) {
-      this.setState({ isLoggedIn: isLoggedIn, account: accounts[0], etherscan: "https://ropsten.etherscan.io/address/" +  accounts[0]});
+    if (typeof web3 !== 'undefined') {
+      // Use Mist/MetaMask's provider
+      web3 = new Web3(web3.currentProvider);
+    } else {
+      console.log('No web3? You should consider trying MetaMask!')
+      // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
+      web3 = new Web3(new Web3.providers.HttpProvider(process.env.INFURA_URI));
+    }
+
+    // const web3 = new Web3(Web3.givenProvider);
+
+    if (typeof web3 !== 'undefined') {
+      console.log(web3);
+
+      const accounts = await web3.eth.getAccounts();
+      console.log(accounts);
+      
+      const isLoggedIn = (accounts.length > 0);
+      if (isLoggedIn) {
+        this.setState({ isLoggedIn: isLoggedIn, account: accounts[0], etherscan: "https://ropsten.etherscan.io/address/" +  accounts[0]});
+      }
     }
   }
 
