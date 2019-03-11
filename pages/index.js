@@ -24,6 +24,7 @@ new Promise(async (resolve, reject) => {
     try {
       // Request account access if needed
       await window.ethereum.enable();
+      console.log("window.ethereum detected.");
       // Acccounts now exposed
       resolve(web3);
     } catch (error) {
@@ -63,8 +64,6 @@ class IndexPage extends Component {
     const goldbars = await store.dispatch(reduxApi.actions.goldbars.sync());
     return { goldbars, query }
   }
-
-  // getWeb()
 
   async loadBlockchainData() {
     const web3 = await getWeb3();
