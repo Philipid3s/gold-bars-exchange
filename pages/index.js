@@ -16,17 +16,6 @@ import TableCell from '@material-ui/core/TableCell';
 import Button from '@material-ui/core/Button';
 import Input from '@material-ui/core/Input';
 
-function loadWeb3() {
-  if(typeof web3 !== 'undefined') {
-    // use metamask
-    web3 = new Web3(web3.currentProvider);
-  } else {
-    web3 = new Web3(new Web3.providers.HttpProvider(process.env.INFURA_URI));
-  }
-
-  console.log(web3);
-}
-
 class IndexPage extends Component {
 
   static async getInitialProps ({ store, isServer, pathname, query }) {
@@ -36,7 +25,7 @@ class IndexPage extends Component {
   }
 
   async loadBlockchainData() {
-    loadWeb3();
+    const web3 = new Web3(Web3.givenProvider);
 
     const accounts = await web3.eth.getAccounts();
     const isLoggedIn = (accounts.length > 0);
@@ -73,7 +62,7 @@ class IndexPage extends Component {
   }
 
   handleAdd (event) {
-    loadWeb3();
+    const web3 = new Web3(Web3.givenProvider);
 
     var ref = this.state.reference ;
     var price = this.state.askingPrice;
