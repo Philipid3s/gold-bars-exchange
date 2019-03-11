@@ -26,17 +26,19 @@ class IndexPage extends Component {
 
   async loadBlockchainData() {
 
-    if (process.env.INFURA_URI) {
-      // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-      web3 = new Web3(new Web3.providers.HttpProvider(process.env.INFURA_URI));
-    } else {
-      // Use Mist/MetaMask's provider
-      web3 = new Web3(web3.currentProvider);
-    }
+    // if (process.env.INFURA_URI) {
+    //   // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
+    //   web3 = new Web3(new Web3.providers.HttpProvider(process.env.INFURA_URI));
+    //   console.log('infura : ' + web3);
+    // } else {
+    //   // Use Mist/MetaMask's provider
+    //   web3 = new Web3(web3.currentProvider);
+    // }
+
+    const web3 = new Web3(window.web3.currentProvider); 
+    console.log(web3);
 
     if (typeof web3 !== 'undefined') {
-      console.log(web3);
-
       const accounts = await web3.eth.getAccounts();
       console.log(accounts);
       
