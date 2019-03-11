@@ -19,7 +19,7 @@ import Input from '@material-ui/core/Input';
 const getWeb3 = () =>
 new Promise(async (resolve, reject) => {
   // Modern dapp browsers...
-  if (window.ethereum) {
+  if (false || window.ethereum) {
     const web3 = new Web3(window.ethereum);
     try {
       // Request account access if needed
@@ -32,7 +32,7 @@ new Promise(async (resolve, reject) => {
     }
   }
   // Legacy dapp browsers...
-  else if (window.web3) {
+  else if (false || window.web3) {
     try {
       // Use Mist/MetaMask's provider.
       const web3 = new Web3(window.web3.currentProvider);
