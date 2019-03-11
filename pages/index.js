@@ -26,16 +26,13 @@ class IndexPage extends Component {
 
   async loadBlockchainData() {
 
-    if (typeof web3 !== 'undefined') {
-      // Use Mist/MetaMask's provider
-      web3 = new Web3(web3.currentProvider);
-    } else {
-      console.log('No web3? You should consider trying MetaMask!')
+    if (process.env.INFURA_URI) {
       // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
       web3 = new Web3(new Web3.providers.HttpProvider(process.env.INFURA_URI));
+    } else {
+      // Use Mist/MetaMask's provider
+      web3 = new Web3(web3.currentProvider);
     }
-
-    // const web3 = new Web3(Web3.givenProvider);
 
     if (typeof web3 !== 'undefined') {
       console.log(web3);
@@ -50,8 +47,21 @@ class IndexPage extends Component {
     }
   }
 
+  componentWillMount() {
+  }
+  
   componentDidMount() {
-    
+    // Modern dapp browsers...
+    if (typeof window.web3 === 'undefined') {
+      // no web3, use fallback
+      console.error("Please use a web3 browser");
+    }
+    else {
+      if (window.web3.currentProvider.isMetaMask) {
+        console.log('Metamask detected');
+      }
+    }
+
     this.loadBlockchainData()
   }
 
