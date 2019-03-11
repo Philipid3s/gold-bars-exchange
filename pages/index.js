@@ -23,6 +23,8 @@ function loadWeb3() {
   } else {
     web3 = new Web3(new Web3.providers.HttpProvider(process.env.INFURA_URI));
   }
+
+  console.log(web3);
 }
 
 class IndexPage extends Component {
