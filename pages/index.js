@@ -16,6 +16,46 @@ import TableCell from '@material-ui/core/TableCell';
 import Button from '@material-ui/core/Button';
 import Input from '@material-ui/core/Input';
 
+const getWeb3 = () =>
+new Promise(async (resolve, reject) => {
+  // Modern dapp browsers...
+  if (window.ethereum) {
+    const web3 = new Web3(window.ethereum);
+    try {
+      // Request account access if needed
+      await window.ethereum.enable();
+      // Acccounts now exposed
+      resolve(web3);
+    } catch (error) {
+      reject(error);
+    }
+  }
+  // Legacy dapp browsers...
+  else if (window.web3) {
+    try {
+      // Use Mist/MetaMask's provider.
+      const web3 = new Web3(window.web3.currentProvider);
+      console.log("Injected web3 detected.");
+      resolve(web3);
+    } catch (error) {
+      reject(error);
+    }
+  }
+  // Fallback to localhost; use dev console port by default...
+  else {
+    try {
+      const provider = new Web3.providers.HttpProvider(
+        process.env.INFURA_URI
+      );
+      const web3 = new Web3(provider);
+      console.log("No web3 instance injected, using Local web3.");
+      resolve(web3);
+    } catch (error) {
+      reject(error);
+    }
+  }
+});
+
 class IndexPage extends Component {
 
   static async getInitialProps ({ store, isServer, pathname, query }) {
@@ -24,18 +64,11 @@ class IndexPage extends Component {
     return { goldbars, query }
   }
 
+  // getWeb()
+
   async loadBlockchainData() {
+    const web3 = await getWeb3();
 
-    // if (process.env.INFURA_URI) {
-    //   // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-    //   web3 = new Web3(new Web3.providers.HttpProvider(process.env.INFURA_URI));
-    //   console.log('infura : ' + web3);
-    // } else {
-    //   // Use Mist/MetaMask's provider
-    //   web3 = new Web3(web3.currentProvider);
-    // }
-
-    const web3 = new Web3(window.web3.currentProvider); 
     console.log(web3);
 
     if (typeof web3 !== 'undefined') {
