@@ -69,16 +69,19 @@ class IndexPage extends Component {
     const web3 = await getWeb3();
 
     console.log(web3);
-    console.log(window.web3);
 
     if (typeof web3 !== 'undefined') {
-      const accounts = await web3.eth.getAccounts();
-      console.log(accounts);
-      
-      const isLoggedIn = (accounts.length > 0);
-      if (isLoggedIn) {
-        this.setState({ isLoggedIn: isLoggedIn, account: accounts[0], etherscan: "https://ropsten.etherscan.io/address/" +  accounts[0]});
-      }
+
+      web3.eth.getAccounts(accounts => 
+        {
+          console.log(accounts[0]);
+
+          const isLoggedIn = (accounts.length > 0);
+          if (isLoggedIn) {
+            this.setState({ isLoggedIn: isLoggedIn, account: accounts[0], etherscan: "https://ropsten.etherscan.io/address/" +  accounts[0]});
+          }
+        }
+      );
     }
   }
 
