@@ -31,7 +31,7 @@ const GoldBarItem = ({ goldbar, index, inProgress, handleMakeOffer }) => (
         a {
           margin-left: 0.5em;
           cursor: pointer;
-          font-size: 0.6em;
+          font-size: 0.8em;
           text-transform: uppercase;
         }
         a.offer {
