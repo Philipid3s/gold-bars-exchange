@@ -229,7 +229,7 @@ class IndexPage extends Component {
             <TableCell>Gold bar reference</TableCell>
             <TableCell>Owner</TableCell>
             <TableCell>Buyer</TableCell>
-            <TableCell>State</TableCell>
+            <TableCell>Status</TableCell>
             <TableCell align-right="true">Asking Price</TableCell>
             <TableCell>actions</TableCell>
           </TableRow>
@@ -239,10 +239,10 @@ class IndexPage extends Component {
         </TableBody>
       </Table>
       <div>
-        <Input placeholder='Enter a gold bar reference' value={this.state.reference} onChange={this.handleChangeInputReference.bind(this)} disabled={this.state.inProgress} />
-        <label>  </label>
-        <Input value={this.state.askingPrice} onChange={this.handleChangeInputAskingPrice.bind(this)} disabled={this.state.inProgress} />
-        <label>  </label>
+        <Input className="inputText" placeholder='Enter a gold bar reference' value={this.state.reference} onChange={this.handleChangeInputReference.bind(this)} disabled={this.state.inProgress} />
+        
+        <Input className="inputText" type="number" value={this.state.askingPrice} onChange={this.handleChangeInputAskingPrice.bind(this)} disabled={this.state.inProgress} />
+
         <Button variant="contained" color="primary"  onClick={this.handleAdd.bind(this)} disabled={this.state.inProgress}>
           Add gold bar
         </Button>

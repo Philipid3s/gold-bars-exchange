@@ -15,6 +15,11 @@ body {
 }
 
 /* Nice & simple: Button - http://codepen.io/tomsoderlund/pen/qqyzqp */
+
+.inputText {
+	margin-right: 0.6em;
+}
+
 button {
 	background-color: dodgerblue;
 	border-radius: 0.2em;
