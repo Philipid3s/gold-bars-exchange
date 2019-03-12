@@ -15,6 +15,7 @@ import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import Button from '@material-ui/core/Button';
 import Input from '@material-ui/core/Input';
+import Icon from '@material-ui/core/Icon';
 
 const getWeb3 = () =>
 new Promise(async (resolve, reject) => {
@@ -218,9 +219,9 @@ class IndexPage extends Component {
         description='Gold bars exchange platform'
       />
 
-      <h1>Gold bars Exchange platform</h1>
+      <h1><Icon color="primary">account_balance</Icon> Gold bars exchange platform</h1>
 
-      <p>Ethereum account : <a href={this.state.etherscan}>{this.state.account}</a></p>
+      <h6>Ethereum account <a href={this.state.etherscan}>{this.state.account}</a></h6>
 
       <Table>
         <TableHead>
@@ -262,7 +263,7 @@ class IndexPage extends Component {
         description='Gold bars exchange platform'
       />
 
-      <h1>Gold bars Exchange platform</h1>
+      <h1><Icon color="primary">account_balance</Icon> Gold bars exchange platform</h1>
 
       <p>Please, connect your Ethereum account.</p>
     </main>
