@@ -16,6 +16,7 @@ import TableCell from '@material-ui/core/TableCell';
 import Button from '@material-ui/core/Button';
 import Input from '@material-ui/core/Input';
 import Icon from '@material-ui/core/Icon';
+import Typography from '@material-ui/core/Typography';
 
 const contractABI = [{"constant":true,"inputs":[],"name":"Reference","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"OfferPrice","outputs":[{"name":"","type":"int256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"GoldBarBuyer","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"offerPrice","type":"int256"}],"name":"MakeOffer","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"Reject","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"AcceptOffer","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"GoldBarOwner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"AskingPrice","outputs":[{"name":"","type":"int256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"State","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"ref","type":"string"},{"name":"price","type":"int256"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"}];
 
@@ -341,9 +342,17 @@ class IndexPage extends Component {
         description='Gold bars exchange platform'
       />
 
-      <h1><Icon color="primary">account_balance</Icon> Gold bars exchange platform</h1>
+      <Typography variant="h4" gutterBottom>
+        <Icon color="primary">account_balance</Icon> Gold bars exchange
+      </Typography>
 
-      <h6>Ethereum account <a href={this.state.etherscan}>{this.state.account}</a></h6>
+      <Typography component="h6" gutterBottom>
+        Blockchain-Based Platform for the Physical Trade of Commodities
+      </Typography>
+
+      <Typography variant="body2" gutterBottom>
+        Ethereum account <a href={this.state.etherscan}>{this.state.account}</a>
+      </Typography>
 
       <Table>
         <TableHead>
@@ -385,11 +394,8 @@ class IndexPage extends Component {
         title='Gold bars exchange platform'
         description='Gold bars exchange platform'
       />
-
-      <h1><Icon color="primary">account_balance</Icon> Gold bars exchange platform</h1>
-
       <p>Please, connect your Ethereum account.</p>
-    </main>
+      </main>
     }
   };
 }
