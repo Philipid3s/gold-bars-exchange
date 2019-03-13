@@ -24,7 +24,7 @@ const GoldBarItem = ({ goldbar, index, inProgress, handleMakeOffer, handleAccept
       </TableCell>
 
       <TableCell align-right="true">
-        {goldbar.offer}
+        {goldbar.offerPrice}
       </TableCell>
 
       <TableCell>   

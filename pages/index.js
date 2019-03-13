@@ -155,7 +155,7 @@ class IndexPage extends Component {
       arguments: [ref, price]
     })
     .send({
-      from: this.state.account //,gas: '4700000'
+      from: this.state.account
     })
     .on('error', (error) => { 
       console.error(error.message);
