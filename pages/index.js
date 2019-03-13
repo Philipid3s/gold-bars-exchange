@@ -17,6 +17,8 @@ import Button from '@material-ui/core/Button';
 import Input from '@material-ui/core/Input';
 import Icon from '@material-ui/core/Icon';
 
+const contractABI = [{"constant":true,"inputs":[],"name":"Reference","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"OfferPrice","outputs":[{"name":"","type":"int256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"GoldBarBuyer","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"offerPrice","type":"int256"}],"name":"MakeOffer","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"Reject","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"AcceptOffer","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"GoldBarOwner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"AskingPrice","outputs":[{"name":"","type":"int256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"State","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"ref","type":"string"},{"name":"price","type":"int256"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"}];
+
 const getWeb3 = () =>
 new Promise(async (resolve, reject) => {
   // Modern dapp browsers...
@@ -142,7 +144,7 @@ class IndexPage extends Component {
     var ref = this.state.reference ;
     var price = this.state.askingPrice;
 
-    var goldbarexchangeContract = new web3.eth.Contract([{"constant":true,"inputs":[],"name":"Reference","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"OfferPrice","outputs":[{"name":"","type":"int256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"GoldBarBuyer","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"offerPrice","type":"int256"}],"name":"MakeOffer","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"Reject","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"AcceptOffer","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"GoldBarOwner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"AskingPrice","outputs":[{"name":"","type":"int256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"State","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"ref","type":"string"},{"name":"price","type":"int256"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"}]);
+    var goldbarexchangeContract = new web3.eth.Contract(contractABI);
     var data = '0x608060405234801561001057600080fd5b506040516107fa3803806107fa8339810180604052810190808051820192919060200180519060200190929190505050336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555080600281905550816001908051906020019061009d9291906100c9565b506000600360006101000a81548160ff021916908360028111156100bd57fe5b0217905550505061016e565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f1061010a57805160ff1916838001178555610138565b82800160010185558215610138579182015b8281111561013757825182559160200191906001019061011c565b5b5090506101459190610149565b5090565b61016b91905b8082111561016757600081600090555060010161014f565b5090565b90565b61067d8061017d6000396000f300608060405260043610610099576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680631d915d1b1461009e578063530701521461012e5780637354798a1461015957806385b44a26146101b0578063cba59827146101dd578063d12cd942146101f4578063dd07fc841461020b578063ec69f29f14610262578063f1b6dccd1461028d575b600080fd5b3480156100aa57600080fd5b506100b36102c6565b6040518080602001828103825283818151815260200191508051906020019080838360005b838110156100f35780820151818401526020810190506100d8565b50505050905090810190601f1680156101205780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b34801561013a57600080fd5b50610143610364565b6040518082815260200191505060405180910390f35b34801561016557600080fd5b5061016e61036a565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b3480156101bc57600080fd5b506101db60048036038101908080359060200190929190505050610390565b005b3480156101e957600080fd5b506101f261049b565b005b34801561020057600080fd5b50610209610592565b005b34801561021757600080fd5b50610220610613565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561026e57600080fd5b50610277610638565b6040518082815260200191505060405180910390f35b34801561029957600080fd5b506102a261063e565b604051808260028111156102b257fe5b60ff16815260200191505060405180910390f35b60018054600181600116156101000203166002900480601f01602080910402602001604051908101604052809291908181526020018280546001816001161561010002031660029004801561035c5780601f106103315761010080835404028352916020019161035c565b820191906000526020600020905b81548152906001019060200180831161033f57829003601f168201915b505050505081565b60045481565b600360019054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b600081141561039e57600080fd5b600060028111156103ab57fe5b600360009054906101000a900460ff1660028111156103c657fe5b1415156103d257600080fd5b3373ffffffffffffffffffffffffffffffffffffffff166000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16141561042c57600080fd5b33600360016101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550806004819055506001600360006101000a81548160ff0219169083600281111561049357fe5b021790555050565b600160028111156104a857fe5b600360009054906101000a900460ff1660028111156104c357fe5b1415156104cf57600080fd5b3373ffffffffffffffffffffffffffffffffffffffff166000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1614151561052a57600080fd5b6000600360016101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506000600360006101000a81548160ff0219169083600281111561058b57fe5b0217905550565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415156105ed57600080fd5b6002600360006101000a81548160ff0219169083600281111561060c57fe5b0217905550565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b60025481565b600360009054906101000a900460ff16815600a165627a7a7230582090b70da19d731a8ac1332e3027b40c56a89955fb8a94487ac408de777daef2d90029'; 
     
     this.setState({ inProgress: true });
@@ -154,6 +156,10 @@ class IndexPage extends Component {
     })
     .send({
       from: this.state.account //,gas: '4700000'
+    })
+    .on('error', (error) => { 
+      console.error(error.message);
+      this.setState({ inProgress: false });
     })
     .on('confirmation', (confirmationNumber, receipt) => { 
       if (this.state.contract !== receipt.contractAddress)
@@ -185,13 +191,127 @@ class IndexPage extends Component {
   }
 
   handleMakeOffer (goldbar, index, goldbarId, event) {
-    const offer = window.prompt('Your offer', goldbar.askingPrice)
-    //if (!reference) return
-    //const callbackWhenDone = () => this.setState({ inProgress: false })
-    //this.setState({ inProgress: goldbarId })
-    // Actual data request
-    //const newGoldBar = { id: goldbarId, reference: reference }
-    //this.props.dispatch(reduxApi.actions.goldbars.put({ id: goldbarId }, { body: JSON.stringify(newGoldBar) }, callbackWhenDone))
+
+    if (goldbar.state != "Available") {
+      window.alert('Gold bar not available.');
+      return;
+    }
+
+    if (this.state.account == goldbar.owner) {
+      window.alert('You are the owner, you can\'t make an offer.');
+      return;
+    }
+
+    const offer = window.prompt('Your offer:', goldbar.askingPrice)
+    if (!offer) return
+
+    const web3 = new Web3(Web3.givenProvider);
+    web3.eth.defaultAccount = this.state.account;
+
+    const goldbarexchangeContract = new web3.eth.Contract(contractABI, goldbar.contract);
+
+    this.setState({ inProgress: true });
+
+    goldbarexchangeContract.methods.MakeOffer(offer)
+    .send({
+      from: this.state.account 
+    })
+    .on('error', (error) => { 
+      console.error(error.message);
+      this.setState({ inProgress: false });
+    })
+    .on('confirmation', (confirmationNumber, receipt) => { 
+      console.log('Transaction confirmed: ' + receipt.transactionHash);
+
+      const callbackWhenDone = () => this.setState({ inProgress: false })
+
+      // update goldbar
+      goldbar.offerPrice = offer;
+      goldbar.buyer = this.state.account;
+      goldbar.state = "Offer Placed";
+
+      this.props.dispatch(reduxApi.actions.goldbars.put({ id: goldbarId }, { body: JSON.stringify(goldbar) }, callbackWhenDone))
+    });
+  }
+
+
+  handleAcceptOffer (goldbar, index, goldbarId, event) {
+
+    if (goldbar.state != "Offer Placed") {
+      window.alert('No offer has been placed.');
+      return;
+    }
+
+    if (this.state.account != goldbar.owner) {
+      window.alert('You are not the owner, you can\'t accept the offer.');
+      return;
+    }
+
+    const web3 = new Web3(Web3.givenProvider);
+    web3.eth.defaultAccount = this.state.account;
+
+    const goldbarexchangeContract = new web3.eth.Contract(contractABI, goldbar.contract);
+
+    this.setState({ inProgress: true });
+
+    goldbarexchangeContract.methods.AcceptOffer()
+    .send({
+      from: this.state.account 
+    })
+    .on('error', (error) => { 
+      console.error(error.message);
+      this.setState({ inProgress: false });
+    })
+    .on('confirmation', (confirmationNumber, receipt) => { 
+      console.log('Transaction confirmed: ' + receipt.transactionHash);
+
+      const callbackWhenDone = () => this.setState({ inProgress: false })
+
+      // update goldbar
+      goldbar.state = "Accepted";
+
+      this.props.dispatch(reduxApi.actions.goldbars.put({ id: goldbarId }, { body: JSON.stringify(goldbar) }, callbackWhenDone))
+    });
+  }
+
+  handleRejectOffer (goldbar, index, goldbarId, event) {
+
+    if (goldbar.state != "Offer Placed") {
+      window.alert('No offer has been placed.');
+      return;
+    }
+
+    if (this.state.account != goldbar.owner) {
+      window.alert('You are not the owner, you can\'t reject the offer.');
+      return;
+    }
+
+    const web3 = new Web3(Web3.givenProvider);
+    web3.eth.defaultAccount = this.state.account;
+
+    const goldbarexchangeContract = new web3.eth.Contract(contractABI, goldbar.contract);
+
+    this.setState({ inProgress: true });
+
+    goldbarexchangeContract.methods.Reject()
+    .send({
+      from: this.state.account 
+    })
+    .on('error', (error) => { 
+      console.error(error);
+      this.setState({ inProgress: false });
+    })
+    .on('confirmation', (confirmationNumber, receipt) => { 
+      console.log('Transaction confirmed: ' + receipt.transactionHash);
+
+      const callbackWhenDone = () => this.setState({ inProgress: false })
+
+      // update goldbar
+      goldbar.state = "Available";
+      goldbar.buyer = "";
+
+      this.props.dispatch(reduxApi.actions.goldbars.put({ id: goldbarId }, { body: JSON.stringify(goldbar) }, callbackWhenDone))
+    });
   }
 
   render () {
@@ -207,6 +327,8 @@ class IndexPage extends Component {
           index={index}
           inProgress={this.state.inProgress}
           handleMakeOffer={this.handleMakeOffer.bind(this, goldbar)}
+          handleAcceptOffer={this.handleAcceptOffer.bind(this, goldbar)}
+          handleRejectOffer={this.handleRejectOffer.bind(this, goldbar)}
         />
       )
       : []
@@ -230,7 +352,8 @@ class IndexPage extends Component {
             <TableCell>Owner</TableCell>
             <TableCell>Buyer</TableCell>
             <TableCell>Status</TableCell>
-            <TableCell align-right="true">Asking Price</TableCell>
+            <TableCell align-right="true">Ask Price</TableCell>
+            <TableCell align-right="true">Offer</TableCell>
             <TableCell>actions</TableCell>
           </TableRow>
         </TableHead>
