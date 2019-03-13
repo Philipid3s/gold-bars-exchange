@@ -353,7 +353,7 @@ class IndexPage extends Component {
             <TableCell>Buyer</TableCell>
             <TableCell>Status</TableCell>
             <TableCell align-right="true">Ask Price</TableCell>
-            <TableCell align-right="true">Offer</TableCell>
+            <TableCell align-right="true">Last Offer</TableCell>
             <TableCell>actions</TableCell>
           </TableRow>
         </TableHead>
