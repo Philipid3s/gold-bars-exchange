@@ -162,7 +162,7 @@ class IndexPage extends Component {
       console.error(error.message);
       this.setState({ inProgress: false });
     })
-    .on('confirmation', (confirmationNumber, receipt) => { 
+    .once('receipt', (receipt) => { 
       if (this.state.contract !== receipt.contractAddress)
       {
         console.log('Contract successfully created: ' + receipt.contractAddress) // contains the new contract address
@@ -221,7 +221,7 @@ class IndexPage extends Component {
       console.error(error.message);
       this.setState({ inProgress: false });
     })
-    .on('confirmation', (confirmationNumber, receipt) => { 
+    .once('receipt', (receipt) => { 
       console.log('Transaction confirmed: ' + receipt.transactionHash);
 
       const callbackWhenDone = () => this.setState({ inProgress: false })
@@ -263,7 +263,7 @@ class IndexPage extends Component {
       console.error(error.message);
       this.setState({ inProgress: false });
     })
-    .on('confirmation', (confirmationNumber, receipt) => { 
+    .once('receipt', (receipt) => { 
       console.log('Transaction confirmed: ' + receipt.transactionHash);
 
       const callbackWhenDone = () => this.setState({ inProgress: false })
@@ -302,7 +302,7 @@ class IndexPage extends Component {
       console.error(error);
       this.setState({ inProgress: false });
     })
-    .on('confirmation', (confirmationNumber, receipt) => { 
+    .once('receipt', (receipt) => { 
       console.log('Transaction confirmed: ' + receipt.transactionHash);
 
       const callbackWhenDone = () => this.setState({ inProgress: false })
