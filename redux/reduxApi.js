@@ -6,6 +6,7 @@ import adapterFetch from 'redux-api/lib/adapters/fetch'
 import { createStore, applyMiddleware, combineReducers } from 'redux'
 import thunkMiddleware from 'redux-thunk'
 import { connect } from 'react-redux'
+import { createWrapper } from 'next-redux-wrapper'
 
 const { config } = require('../config/config')
 
@@ -31,7 +32,7 @@ const thisReduxApi = reduxApi({
 
   // Complex endpoint description
   goldbars: {
-    url: '/api/goldbars/:id',
+    url: '/api/v1/goldbars/:id',
     crud: true, // Make CRUD actions: https://github.com/lexich/redux-api/blob/master/docs/DOCS.md#crud
 
     // base endpoint options `fetch(url, options)`
@@ -62,7 +63,8 @@ const thisReduxApi = reduxApi({
 export default thisReduxApi
 
 const createStoreWithThunkMiddleware = applyMiddleware(thunkMiddleware)(createStore)
-export const makeStore = (reduxState, enhancer) => createStoreWithThunkMiddleware(combineReducers(thisReduxApi.reducers), reduxState)
+export const makeStore = () => createStoreWithThunkMiddleware(combineReducers(thisReduxApi.reducers))
+export const wrapper = createWrapper(makeStore)
 
 // endpointNames: Use reduxApi endpoint names here
 const mapStateToProps = (endpointNames, reduxState) => {

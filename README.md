@@ -1,67 +1,103 @@
-# Next.js (React) + Redux + Express REST API + MongoDB + Mongoose-Crudify boilerplate
+# Gold Bars Exchange
 
-_You want an SQL database instead of MongoDB? Check out [nextjs-sql-rest-api-boilerplate](https://github.com/tomsoderlund/nextjs-sql-rest-api-boilerplate) instead._
+Blockchain-backed marketplace for physical gold bars. The UI lets users create listings, make offers, accept or reject offers, and stores metadata in MongoDB via Next.js API routes. On-chain actions are executed through MetaMask on Polygon Amoy (testnet).
 
-Based on [nextjs-express-boilerplate](https://github.com/johhansantana/nextjs-express-boilerplate), but with added [mongoose-crudify](https://github.com/ryo718/mongoose-crudify) and [redux-api](https://github.com/lexich/redux-api).
+## Stack
+1. **Frontend**: Next.js 14, React 18, MUI v5.
+2. **State**: Redux + redux-api.
+3. **Blockchain**: viem + MetaMask.
+4. **Database**: MongoDB (Mongoose).
+5. **API**: Next.js API routes (`/pages/api`).
 
-## Why is this awesome?
+## Features
+1. Create and list gold bar listings.
+2. Make, accept, and reject offers on-chain.
+3. API key protection for API routes (optional).
+4. Swagger docs at `/docs`.
 
-This is a great starting point for a any project where you want **React + Redux** (with server-side rendering, powered by [Next.js](https://github.com/zeit/next.js)) as frontend and **Express/MongoDB** as a REST API backend.
-_Lightning fast, all JavaScript._
+## Project Layout
+1. `pages/index.js`: main UI and Web3 actions.
+2. `pages/status.js`: wallet/chain status.
+3. `pages/api/v1/goldbars/*`: REST API routes.
+4. `models/GoldBar.js`: MongoDB model.
+5. `lib/mongoose.js`: DB connection helper.
+6. `lib/viem.js`: wallet and chain helpers.
+7. `contracts/`: ABI and bytecode.
+8. `components/`: UI components.
 
-* Simple REST API routes with MongoDB database and `mongoose-crudify`.
-* Redux REST support with `redux-api` and `next-redux-wrapper`.
-* Flexible client-side routing with `next-routes` (see `server/routes.js`).
-* Flexible configuration with `config/config.js` and `.env` file.
-* Hot reloading with `nodemon`.
-* Testing with Jasmine.
-* Code formatting and linting with StandardJS.
-* JWT authentication for client-server communication (coming).
+## API
+1. `GET /api/v1/goldbars` (paginated via `limit` and `offset`)
+2. `POST /api/v1/goldbars`
+3. `GET /api/v1/goldbars/:id`
+4. `PUT /api/v1/goldbars/:id`
+5. `DELETE /api/v1/goldbars/:id`
 
-## Demo
+## Swagger
+1. UI: `http://localhost:3000/docs`
+2. JSON: `http://localhost:3000/api/docs`
 
-See [**nextjs-express-mongoose-crudify-boilerplate** running on Heroku here](https://nextjs-express-mongoose.herokuapp.com/).
+## Environment
 
-![nextjs-express-mongoose-crudify-boilerplate demo on Heroku](docs/kittens-demo.gif)
+Create a root `.env`:
 
-## Don’t want Redux?
+```env
+MONGODB_URI=mongodb://localhost/gold-bars
+API_KEY=change-me
+NEXT_PUBLIC_API_KEY=change-me
+NEXT_PUBLIC_RPC_URL=https://rpc-amoy.polygon.technology/
+NEXT_PUBLIC_API_URL=
+```
 
-This project now uses Redux and [redux-api](https://github.com/lexich/redux-api). See the [no-redux](https://github.com/tomsoderlund/nextjs-express-mongoose-crudify-boilerplate/tree/no-redux) branch for the (unmaintained) version without Redux.
+Notes:
+1. `API_KEY` secures API routes (server-side).
+2. `NEXT_PUBLIC_API_KEY` is sent by the frontend in `x-api-key`.
+3. `NEXT_PUBLIC_API_URL` can be left empty to use same-origin API routes.
 
-## How to use
+## Local Dev
 
-Clone this repository:
+```bash
+npm install
+npm run dev
+```
 
-	git clone https://github.com/tomsoderlund/nextjs-express-mongoose-crudify-boilerplate.git [MY_APP]
+API: `http://localhost:3000/api/v1/goldbars`
 
-Install dependencies:
+## Mongo via Docker
 
-	cd [MY_APP]
-	yarn  # or npm install
+```bash
+docker compose up --build
+```
 
-Start it by doing the following:
+MongoDB: `mongodb://localhost:27017`
 
-	export MONGODB_URI=*your mongodb url* // you can get one for free at https://www.mlab.com/home
-	yarn dev
+## Tests
 
-In production:
+API tests:
 
-	yarn build
-	yarn start
+```bash
+npm run test:api
+```
 
-If you navigate to `http://localhost:3001/` you will see a [Next.js](https://github.com/zeit/next.js) page with a list of kittens (or an empty list if you haven't added one).
+## Polygon Amoy Test Account
 
-You have your API server running at `http://localhost:3001/api/kittens`
+1. Install MetaMask and create a wallet.
+2. Add Polygon Amoy network in MetaMask:
 
+```text
+Network Name: Polygon Amoy Testnet
+RPC URL: https://rpc-amoy.polygon.technology/
+Chain ID: 80002
+Currency Symbol: POL
+Block Explorer URL: https://amoy.polygonscan.com/
+```
 
-## Deploying
+3. Get test tokens at:
 
-### Deploying on Heroku
+```text
+https://faucet.polygon.technology
+```
 
-	heroku create [MY_APP]
-	heroku addons:add mongolab
-	git push heroku master
+## Notes
 
-### Deploying on Now
-
-See instructions on [nextjs-express-boilerplate](https://github.com/johhansantana/nextjs-express-boilerplate).
+1. Actions are blocked if wallet is not connected or chain is not Amoy.
+2. The current UI uses a simple listing flow; the contract ABI/bytecode are in `contracts/`.

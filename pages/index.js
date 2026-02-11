@@ -1,118 +1,72 @@
 import { Component } from 'react'
 
-import reduxApi, { withGoldBars } from '../redux/reduxApi.js'
+import reduxApi, { withGoldBars, wrapper } from '../redux/reduxApi.js'
 
-import Web3 from 'web3'
+import { createViemClients, ensureAmoyChain } from '../lib/viem'
+import { goldBarAbi, goldBarBytecode } from '../contracts/goldbar'
+import { networks } from '../contracts/networks'
 
 // import { Link } from '../server/routes.js'
 import PageHead from '../components/PageHead'
+import Link from 'next/link'
 import GoldBarItem from '../components/GoldBarItem'
+import WalletBanner from '../components/WalletBanner'
 
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
-import Button from '@material-ui/core/Button';
-import Input from '@material-ui/core/Input';
-import Icon from '@material-ui/core/Icon';
-import Typography from '@material-ui/core/Typography';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
+import Button from '@mui/material/Button';
+import Input from '@mui/material/Input';
+import Icon from '@mui/material/Icon';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import Divider from '@mui/material/Divider';
 
-const contractABI = [{"constant":true,"inputs":[],"name":"Reference","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"OfferPrice","outputs":[{"name":"","type":"int256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"GoldBarBuyer","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"offerPrice","type":"int256"}],"name":"MakeOffer","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"Reject","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"AcceptOffer","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"GoldBarOwner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"AskingPrice","outputs":[{"name":"","type":"int256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"State","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"ref","type":"string"},{"name":"price","type":"int256"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"}];
-
-const getWeb3 = () =>
-new Promise(async (resolve, reject) => {
-  // Modern dapp browsers...
-  if (window.ethereum) {
-    const web3 = new Web3(window.ethereum);
-    try {
-      // Request account access if needed
-      await window.ethereum.enable();
-      console.log("window.ethereum detected.");
-      // Acccounts now exposed
-      resolve(web3);
-    } catch (error) {
-      reject(error);
-    }
-  }
-  // Legacy dapp browsers...
-  else if (window.web3) {
-    try {
-      // Use Mist/MetaMask's provider.
-      const web3 = new Web3(window.web3.currentProvider);
-      console.log("Injected web3 detected.");
-      resolve(web3);
-    } catch (error) {
-      reject(error);
-    }
-  }
-  // Fallback to localhost; use dev console port by default...
-  else {
-    try {
-      const provider = new Web3.providers.HttpProvider(
-        process.env.INFURA_URI
-      );
-      const web3 = new Web3(provider);
-      console.log("No web3 instance injected, using Local web3.");
-      resolve(web3);
-    } catch (error) {
-      reject(error);
-    }
-  }
-});
+const contractABI = goldBarAbi
 
 class IndexPage extends Component {
-
-  static async getInitialProps ({ store, isServer, pathname, query }) {
-    // Get all Gold Bars
-    const goldbars = await store.dispatch(reduxApi.actions.goldbars.sync());
-    return { goldbars, query }
-  }
-
   async loadBlockchainData() {
-    const web3 = await getWeb3();
+    const clients = await createViemClients()
+    if (!clients) {
+      this.setState({ walletStatus: 'no_wallet' })
+      return
+    }
 
-    console.log(web3);
+    const { walletClient, publicClient } = clients
+    this.setState({ walletClient, publicClient })
 
-    if (typeof web3 !== 'undefined') {
-
-      console.log(window.web3.eth.defaultAccount );
-      
-      web3.eth.getAccounts( (error, accounts) => 
-        {
-          if (error)
-          {
-            console.error(error);
-          }
-          else 
-          {
-            console.log(accounts);
-
-            const isLoggedIn = (accounts.length > 0);
-            if (isLoggedIn) {
-              this.setState({ isLoggedIn: isLoggedIn, account: accounts[0], etherscan: "https://ropsten.etherscan.io/address/" +  accounts[0]});
-            }
-          }
+    if (walletClient) {
+      try {
+        const chainId = await walletClient.getChainId()
+        const chainOk = chainId === networks.polygonAmoy.chainId
+        const accounts = await walletClient.getAddresses()
+        const isLoggedIn = (accounts.length > 0)
+        const walletStatus = isLoggedIn ? 'connected' : 'locked'
+        if (isLoggedIn) {
+          this.setState({
+            isLoggedIn: true,
+            account: accounts[0],
+            etherscan: networks.polygonAmoy.explorer + "/address/" + accounts[0],
+            chainId,
+            chainOk,
+            walletStatus
+          })
+        } else {
+          this.setState({ chainId, chainOk, walletStatus })
         }
-      );
-    }
-  }
-
-  componentWillMount() {
-  }
-  
-  componentDidMount() {
-    // Modern dapp browsers...
-    if (typeof window.web3 === 'undefined') {
-      // no web3, use fallback
-      console.error("Please use a web3 browser");
-    }
-    else {
-      if (window.web3.currentProvider.isMetaMask) {
-        console.log('Metamask detected');
+      } catch (error) {
+        console.error(error)
+        this.setState({ walletStatus: 'error' })
       }
+    } else {
+      this.setState({ walletStatus: 'read_only' })
     }
+  }
 
+  componentDidMount() {
     this.loadBlockchainData()
   }
 
@@ -127,8 +81,100 @@ class IndexPage extends Component {
       reference: '',
       askingPrice: 0,
 
-      isLoggedIn: false
+      isLoggedIn: false,
+      walletClient: null,
+      publicClient: null,
+      chainId: null,
+      chainOk: false,
+      walletStatus: 'unknown',
+      readonly: false
     }
+  }
+
+  getActionGuardStatus () {
+    if (this.state.readonly) return { ok: false, reason: 'readonly' }
+    if (!this.state.chainOk) return { ok: false, reason: 'wrong_chain' }
+    if (!this.state.isLoggedIn) return { ok: false, reason: 'no_wallet' }
+    return { ok: true }
+  }
+
+  getActionDisabledReason () {
+    const guard = this.getActionGuardStatus()
+    if (guard.ok) return ''
+    if (guard.reason === 'readonly') return 'Readonly mode enabled'
+    if (guard.reason === 'wrong_chain') return 'Wrong network: switch to Polygon Amoy'
+    if (guard.reason === 'no_wallet') return 'Connect wallet to perform actions'
+    return 'Action blocked'
+  }
+
+  showActionGuardMessage (reason) {
+    if (reason === 'readonly') {
+      window.alert('Readonly mode enabled. Disable it to perform actions.')
+      return
+    }
+    if (reason === 'wrong_chain') {
+      window.alert('Wrong network. Please switch to Polygon Amoy.')
+      return
+    }
+    if (reason === 'no_wallet') {
+      window.alert('Please connect your wallet.')
+    }
+  }
+
+  async handleConnectWallet () {
+    let { walletClient } = this.state
+    if (!walletClient) {
+      const clients = await createViemClients()
+      if (clients && clients.walletClient) {
+        walletClient = clients.walletClient
+        this.setState({ walletClient })
+      }
+    }
+    if (!walletClient) {
+      this.setState({ walletStatus: 'no_wallet' })
+      return
+    }
+    try {
+      this.setState({ walletStatus: 'connecting' })
+      await walletClient.requestAddresses()
+      const accounts = await walletClient.getAddresses()
+      const isLoggedIn = (accounts.length > 0)
+      if (isLoggedIn) {
+        this.setState({
+          isLoggedIn: true,
+          account: accounts[0],
+          etherscan: networks.polygonAmoy.explorer + "/address/" + accounts[0],
+          walletStatus: 'connected'
+        })
+      } else {
+        this.setState({ walletStatus: 'locked' })
+      }
+    } catch (err) {
+      this.setState({ walletStatus: 'error' })
+    }
+  }
+
+  async handleSwitchChain () {
+    const { walletClient } = this.state
+    if (!walletClient) {
+      this.setState({ walletStatus: 'no_wallet' })
+      return
+    }
+    const result = await ensureAmoyChain(walletClient)
+    if (result.ok) {
+      this.setState({ chainId: result.chainId, chainOk: true })
+    } else {
+      this.setState({ chainOk: false })
+    }
+  }
+
+  handleDisconnectWallet () {
+    this.setState({
+      isLoggedIn: false,
+      account: '',
+      etherscan: '',
+      walletStatus: 'locked'
+    })
   }
 
   handleChangeInputReference (event) {
@@ -139,186 +185,224 @@ class IndexPage extends Component {
     this.setState({ askingPrice: event.target.value })
   }
 
-  handleAdd (event) {
-    const web3 = new Web3(Web3.givenProvider);
+  async handleAdd (event) {
+    const guard = this.getActionGuardStatus()
+    if (!guard.ok) {
+      this.showActionGuardMessage(guard.reason)
+      return
+    }
+    var ref = this.state.reference
+    var price = this.state.askingPrice
 
-    var ref = this.state.reference ;
-    var price = this.state.askingPrice;
-
-    var goldbarexchangeContract = new web3.eth.Contract(contractABI);
-    var data = '0x608060405234801561001057600080fd5b506040516107fa3803806107fa8339810180604052810190808051820192919060200180519060200190929190505050336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555080600281905550816001908051906020019061009d9291906100c9565b506000600360006101000a81548160ff021916908360028111156100bd57fe5b0217905550505061016e565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f1061010a57805160ff1916838001178555610138565b82800160010185558215610138579182015b8281111561013757825182559160200191906001019061011c565b5b5090506101459190610149565b5090565b61016b91905b8082111561016757600081600090555060010161014f565b5090565b90565b61067d8061017d6000396000f300608060405260043610610099576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680631d915d1b1461009e578063530701521461012e5780637354798a1461015957806385b44a26146101b0578063cba59827146101dd578063d12cd942146101f4578063dd07fc841461020b578063ec69f29f14610262578063f1b6dccd1461028d575b600080fd5b3480156100aa57600080fd5b506100b36102c6565b6040518080602001828103825283818151815260200191508051906020019080838360005b838110156100f35780820151818401526020810190506100d8565b50505050905090810190601f1680156101205780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b34801561013a57600080fd5b50610143610364565b6040518082815260200191505060405180910390f35b34801561016557600080fd5b5061016e61036a565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b3480156101bc57600080fd5b506101db60048036038101908080359060200190929190505050610390565b005b3480156101e957600080fd5b506101f261049b565b005b34801561020057600080fd5b50610209610592565b005b34801561021757600080fd5b50610220610613565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b34801561026e57600080fd5b50610277610638565b6040518082815260200191505060405180910390f35b34801561029957600080fd5b506102a261063e565b604051808260028111156102b257fe5b60ff16815260200191505060405180910390f35b60018054600181600116156101000203166002900480601f01602080910402602001604051908101604052809291908181526020018280546001816001161561010002031660029004801561035c5780601f106103315761010080835404028352916020019161035c565b820191906000526020600020905b81548152906001019060200180831161033f57829003601f168201915b505050505081565b60045481565b600360019054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b600081141561039e57600080fd5b600060028111156103ab57fe5b600360009054906101000a900460ff1660028111156103c657fe5b1415156103d257600080fd5b3373ffffffffffffffffffffffffffffffffffffffff166000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16141561042c57600080fd5b33600360016101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550806004819055506001600360006101000a81548160ff0219169083600281111561049357fe5b021790555050565b600160028111156104a857fe5b600360009054906101000a900460ff1660028111156104c357fe5b1415156104cf57600080fd5b3373ffffffffffffffffffffffffffffffffffffffff166000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1614151561052a57600080fd5b6000600360016101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506000600360006101000a81548160ff0219169083600281111561058b57fe5b0217905550565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161415156105ed57600080fd5b6002600360006101000a81548160ff0219169083600281111561060c57fe5b0217905550565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b60025481565b600360009054906101000a900460ff16815600a165627a7a7230582090b70da19d731a8ac1332e3027b40c56a89955fb8a94487ac408de777daef2d90029'; 
+    var data = goldBarBytecode
     
-    this.setState({ inProgress: true });
+    this.setState({ inProgress: true })
 
-    // Gas estimation
-    goldbarexchangeContract.deploy({
-      data: data,
-      arguments: [ref, price]
-    })
-    .send({
-      from: this.state.account
-    })
-    .on('error', (error) => { 
-      console.error(error.message);
-      this.setState({ inProgress: false });
-    })
-    .once('receipt', (receipt) => { 
-      if (this.state.contract !== receipt.contractAddress)
-      {
-        console.log('Contract successfully created: ' + receipt.contractAddress) // contains the new contract address
+    const { walletClient, publicClient } = this.state
+    if (!walletClient || !publicClient) {
+      console.error('No wallet client available')
+      this.setState({ inProgress: false })
+      return
+    }
 
-        // after eth transaction
+    try {
+      const [account] = await walletClient.getAddresses()
+      const hash = await walletClient.deployContract({
+        abi: contractABI,
+        bytecode: data,
+        args: [ref, BigInt(price)],
+        account
+      })
+      const receipt = await publicClient.waitForTransactionReceipt({ hash })
+      const contractAddress = receipt.contractAddress
+      if (!contractAddress) throw new Error('No contract address in receipt')
+
+      if (this.state.contract !== contractAddress) {
+        console.log('Contract successfully created: ' + contractAddress)
+
         const { reference, askingPrice } = this.state
         if (!reference) return
         const callbackWhenDone = () => this.setState({ reference: '', askingPrice: 0, inProgress: false })
 
-        // Actual data request
         const newGoldBar = { 
-          contract: receipt.contractAddress,
-
+          contract: contractAddress,
           reference: reference,
           owner: this.state.account,
           askingPrice: askingPrice,
           state: 'Available',
-
           buyer: '',
           offerPrice: 0
         }
         this.props.dispatch(reduxApi.actions.goldbars.post({}, { body: JSON.stringify(newGoldBar) }, callbackWhenDone))
         
-        this.setState( {contract: receipt.contractAddress});
+        this.setState( {contract: contractAddress})
       }
-    })
+    } catch (error) {
+      console.error(error.message || error)
+      this.setState({ inProgress: false })
+    }
   }
 
-  handleMakeOffer (goldbar, index, goldbarId, event) {
+  async handleMakeOffer (goldbar, index, goldbarId, event) {
+    const guard = this.getActionGuardStatus()
+    if (!guard.ok) {
+      this.showActionGuardMessage(guard.reason)
+      return
+    }
 
     if (goldbar.state != "Available") {
-      window.alert('Gold bar not available.');
-      return;
+      window.alert('Gold bar not available.')
+      return
     }
 
     if (this.state.account == goldbar.owner) {
-      window.alert('You are the owner, you can\'t make an offer.');
-      return;
+      window.alert("You are the owner, you can't make an offer.")
+      return
     }
 
     const offer = window.prompt('Your offer:', goldbar.askingPrice)
     if (!offer) return
 
-    const web3 = new Web3(Web3.givenProvider);
-    web3.eth.defaultAccount = this.state.account;
+    this.setState({ inProgress: true })
 
-    const goldbarexchangeContract = new web3.eth.Contract(contractABI, goldbar.contract);
+    const { walletClient, publicClient } = this.state
+    if (!walletClient || !publicClient) {
+      console.error('No wallet client available')
+      this.setState({ inProgress: false })
+      return
+    }
 
-    this.setState({ inProgress: true });
-
-    goldbarexchangeContract.methods.MakeOffer(offer)
-    .send({
-      from: this.state.account 
-    })
-    .on('error', (error) => { 
-      console.error(error.message);
-      this.setState({ inProgress: false });
-    })
-    .once('receipt', (receipt) => { 
-      console.log('Transaction confirmed: ' + receipt.transactionHash);
+    try {
+      const [account] = await walletClient.getAddresses()
+      const hash = await walletClient.writeContract({
+        address: goldbar.contract,
+        abi: contractABI,
+        functionName: 'MakeOffer',
+        args: [BigInt(offer)],
+        account
+      })
+      const receipt = await publicClient.waitForTransactionReceipt({ hash })
+      console.log('Transaction confirmed: ' + receipt.transactionHash)
 
       const callbackWhenDone = () => this.setState({ inProgress: false })
 
-      // update goldbar
-      goldbar.offerPrice = offer;
-      goldbar.buyer = this.state.account;
-      goldbar.state = "Offer Placed";
+      goldbar.offerPrice = offer
+      goldbar.buyer = this.state.account
+      goldbar.state = "Offer Placed"
 
       this.props.dispatch(reduxApi.actions.goldbars.put({ id: goldbarId }, { body: JSON.stringify(goldbar) }, callbackWhenDone))
-    });
+    } catch (error) {
+      console.error(error.message || error)
+      this.setState({ inProgress: false })
+    }
   }
 
-
-  handleAcceptOffer (goldbar, index, goldbarId, event) {
+  async handleAcceptOffer (goldbar, index, goldbarId, event) {
+    const guard = this.getActionGuardStatus()
+    if (!guard.ok) {
+      this.showActionGuardMessage(guard.reason)
+      return
+    }
 
     if (goldbar.state != "Offer Placed") {
-      window.alert('No offer has been placed.');
-      return;
+      window.alert('No offer has been placed.')
+      return
     }
 
     if (this.state.account != goldbar.owner) {
-      window.alert('You are not the owner, you can\'t accept the offer.');
-      return;
+      window.alert("You are not the owner, you can't accept the offer.")
+      return
     }
 
-    const web3 = new Web3(Web3.givenProvider);
-    web3.eth.defaultAccount = this.state.account;
+    this.setState({ inProgress: true })
 
-    const goldbarexchangeContract = new web3.eth.Contract(contractABI, goldbar.contract);
+    const { walletClient, publicClient } = this.state
+    if (!walletClient || !publicClient) {
+      console.error('No wallet client available')
+      this.setState({ inProgress: false })
+      return
+    }
 
-    this.setState({ inProgress: true });
-
-    goldbarexchangeContract.methods.AcceptOffer()
-    .send({
-      from: this.state.account 
-    })
-    .on('error', (error) => { 
-      console.error(error.message);
-      this.setState({ inProgress: false });
-    })
-    .once('receipt', (receipt) => { 
-      console.log('Transaction confirmed: ' + receipt.transactionHash);
+    try {
+      const [account] = await walletClient.getAddresses()
+      const hash = await walletClient.writeContract({
+        address: goldbar.contract,
+        abi: contractABI,
+        functionName: 'AcceptOffer',
+        args: [],
+        account
+      })
+      const receipt = await publicClient.waitForTransactionReceipt({ hash })
+      console.log('Transaction confirmed: ' + receipt.transactionHash)
 
       const callbackWhenDone = () => this.setState({ inProgress: false })
 
-      // update goldbar
-      goldbar.state = "Accepted";
+      goldbar.state = "Accepted"
 
       this.props.dispatch(reduxApi.actions.goldbars.put({ id: goldbarId }, { body: JSON.stringify(goldbar) }, callbackWhenDone))
-    });
+    } catch (error) {
+      console.error(error.message || error)
+      this.setState({ inProgress: false })
+    }
   }
 
-  handleRejectOffer (goldbar, index, goldbarId, event) {
+  async handleRejectOffer (goldbar, index, goldbarId, event) {
+    const guard = this.getActionGuardStatus()
+    if (!guard.ok) {
+      this.showActionGuardMessage(guard.reason)
+      return
+    }
 
     if (goldbar.state != "Offer Placed") {
-      window.alert('No offer has been placed.');
-      return;
+      window.alert('No offer has been placed.')
+      return
     }
 
     if (this.state.account != goldbar.owner) {
-      window.alert('You are not the owner, you can\'t reject the offer.');
-      return;
+      window.alert("You are not the owner, you can't reject the offer.")
+      return
     }
 
-    const web3 = new Web3(Web3.givenProvider);
-    web3.eth.defaultAccount = this.state.account;
+    this.setState({ inProgress: true })
 
-    const goldbarexchangeContract = new web3.eth.Contract(contractABI, goldbar.contract);
+    const { walletClient, publicClient } = this.state
+    if (!walletClient || !publicClient) {
+      console.error('No wallet client available')
+      this.setState({ inProgress: false })
+      return
+    }
 
-    this.setState({ inProgress: true });
-
-    goldbarexchangeContract.methods.Reject()
-    .send({
-      from: this.state.account 
-    })
-    .on('error', (error) => { 
-      console.error(error);
-      this.setState({ inProgress: false });
-    })
-    .once('receipt', (receipt) => { 
-      console.log('Transaction confirmed: ' + receipt.transactionHash);
+    try {
+      const [account] = await walletClient.getAddresses()
+      const hash = await walletClient.writeContract({
+        address: goldbar.contract,
+        abi: contractABI,
+        functionName: 'Reject',
+        args: [],
+        account
+      })
+      const receipt = await publicClient.waitForTransactionReceipt({ hash })
+      console.log('Transaction confirmed: ' + receipt.transactionHash)
 
       const callbackWhenDone = () => this.setState({ inProgress: false })
 
-      // update goldbar
-      goldbar.state = "Available";
-      goldbar.buyer = "";
+      goldbar.state = "Available"
+      goldbar.buyer = ""
 
       this.props.dispatch(reduxApi.actions.goldbars.put({ id: goldbarId }, { body: JSON.stringify(goldbar) }, callbackWhenDone))
-    });
+    } catch (error) {
+      console.error(error.message || error)
+      this.setState({ inProgress: false })
+    }
   }
 
   render () {
     const { goldbars } = this.props;
 
     const isLoggedIn = this.state.isLoggedIn;
+    const { chainOk, chainId, walletStatus, readonly } = this.state
+    const actionsDisabled = !this.getActionGuardStatus().ok
+    const disabledReason = this.getActionDisabledReason()
 
     const goldbarsList = goldbars.data
       ? goldbars.data.map((goldbar, index) => 
@@ -327,6 +411,8 @@ class IndexPage extends Component {
           goldbar={goldbar}
           index={index}
           inProgress={this.state.inProgress}
+          actionsDisabled={actionsDisabled}
+          disabledReason={disabledReason}
           handleMakeOffer={this.handleMakeOffer.bind(this, goldbar)}
           handleAcceptOffer={this.handleAcceptOffer.bind(this, goldbar)}
           handleRejectOffer={this.handleRejectOffer.bind(this, goldbar)}
@@ -342,18 +428,54 @@ class IndexPage extends Component {
         description='Gold bars exchange platform'
       />
 
-      <Typography variant="h4" gutterBottom>
-        <Icon color="primary">account_balance</Icon> Gold bars exchange
-      </Typography>
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography variant="h4" gutterBottom>
+              <Icon color="primary">account_balance</Icon> Gold bars exchange
+            </Typography>
+            <Typography component="h6" gutterBottom>
+              Blockchain-Based Platform for the Physical Trade of Commodities
+            </Typography>
+          </Box>
+          <WalletBanner
+            walletStatus={walletStatus}
+            chainId={chainId}
+            chainOk={chainOk}
+            readonly={readonly}
+            onSwitchChain={this.handleSwitchChain.bind(this)}
+            onConnect={this.handleConnectWallet.bind(this)}
+            onDisconnect={this.handleDisconnectWallet.bind(this)}
+          />
+        </Box>
+        <Divider sx={{ mt: 2 }} />
+      </Box>
+      {!chainOk && (
+        <Typography variant="body2" color="error" gutterBottom>
+          Wrong network: please switch to Polygon Amoy to use actions.
+        </Typography>
+      )}
+      {readonly && (
+        <Typography variant="body2" color="textSecondary" gutterBottom>
+          Readonly mode enabled. Actions are disabled.
+        </Typography>
+      )}
 
-      <Typography component="h6" gutterBottom>
-        Blockchain-Based Platform for the Physical Trade of Commodities
-      </Typography>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" gutterBottom>
+          Trade Physical Gold, Secured On-Chain
+        </Typography>
+        <Typography variant="body1" color="textSecondary">
+          Create listings, place offers, and finalize trades with transparent ownership and pricing.
+        </Typography>
+      </Box>
 
       <Typography variant="body2" gutterBottom>
-        Ethereum account <a href={this.state.etherscan}>{this.state.account}</a>
+        Polygon account <a href={this.state.etherscan}>{this.state.account}</a>
+        {' '}| <Link href="/status">wallet/chain status</Link>
       </Typography>
 
+      <Box sx={{ mt: 2 }}>
       <Table>
         <TableHead>
           <TableRow>
@@ -370,21 +492,25 @@ class IndexPage extends Component {
           {goldbarsList}
         </TableBody>
       </Table>
-      <div>
-        <Input className="inputText" placeholder='Enter a gold bar reference' value={this.state.reference} onChange={this.handleChangeInputReference.bind(this)} disabled={this.state.inProgress} />
-        
-        <Input className="inputText" type="number" value={this.state.askingPrice} onChange={this.handleChangeInputAskingPrice.bind(this)} disabled={this.state.inProgress} />
+      </Box>
 
-        <Button variant="contained" color="primary"  onClick={this.handleAdd.bind(this)} disabled={this.state.inProgress}>
-          Add gold bar
-        </Button>
-
-        <style jsx>{`
-          div {
-            margin-top: 1em;
-          }
-        `}</style>
-      </div>
+      <Box sx={{ mt: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          List a new gold bar
+        </Typography>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
+          <Input className="inputText" placeholder='Enter a gold bar reference' value={this.state.reference} onChange={this.handleChangeInputReference.bind(this)} disabled={this.state.inProgress} />
+          <Input className="inputText" type="number" value={this.state.askingPrice} onChange={this.handleChangeInputAskingPrice.bind(this)} disabled={this.state.inProgress} />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={this.handleAdd.bind(this)}
+            disabled={this.state.inProgress || actionsDisabled}
+          >
+            Add gold bar
+          </Button>
+        </Stack>
+      </Box>
     </main>
     }
     else
@@ -394,10 +520,72 @@ class IndexPage extends Component {
         title='Gold bars exchange platform'
         description='Gold bars exchange platform'
       />
-      <p>Please, connect your Ethereum account.</p>
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography variant="h4" gutterBottom>
+              <Icon color="primary">account_balance</Icon> Gold bars exchange
+            </Typography>
+            <Typography component="h6" gutterBottom>
+              Blockchain-Based Platform for the Physical Trade of Commodities
+            </Typography>
+          </Box>
+          <WalletBanner
+            walletStatus={walletStatus}
+            chainId={chainId}
+            chainOk={chainOk}
+            readonly={readonly}
+            onSwitchChain={this.handleSwitchChain.bind(this)}
+            onConnect={this.handleConnectWallet.bind(this)}
+            onDisconnect={this.handleDisconnectWallet.bind(this)}
+          />
+        </Box>
+        <Divider sx={{ mt: 2 }} />
+      </Box>
+      {!chainOk && (
+        <Typography variant="body2" color="error" gutterBottom>
+          Wrong network: please switch to Polygon Amoy to use actions.
+        </Typography>
+      )}
+      {readonly && (
+        <Typography variant="body2" color="textSecondary" gutterBottom>
+          Readonly mode enabled. Actions are disabled.
+        </Typography>
+      )}
+
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="h4" gutterBottom>
+          Trade Physical Gold, Secured On-Chain
+        </Typography>
+        <Typography variant="body1" color="textSecondary">
+          Connect your wallet to create listings and manage offers on Polygon Amoy.
+        </Typography>
+      </Box>
+
+      <p>Please, connect your Polygon account.</p>
+      {walletStatus === 'locked' && <p>Wallet locked or no accounts. Unlock MetaMask and retry.</p>}
+      {walletStatus === 'no_wallet' && <p>No wallet detected. Install MetaMask.</p>}
+      {walletStatus === 'read_only' && <p>Read-only provider detected. Connect a wallet for transactions.</p>}
+      {walletStatus === 'connecting' && <p>Connecting to wallet...</p>}
+      {walletStatus === 'error' && <p>Wallet error. Please retry.</p>}
+      <p>
+        <label>
+          <input
+            type="checkbox"
+            checked={readonly}
+            onChange={(e) => this.setState({ readonly: e.target.checked })}
+          />
+          {' '}Readonly mode
+        </label>
+      </p>
       </main>
     }
   };
 }
+
+IndexPage.getInitialProps = wrapper.getInitialPageProps((store) => async ({ query }) => {
+  const goldbars = await store.dispatch(reduxApi.actions.goldbars.sync())
+  return { goldbars, query }
+})
 
 export default withGoldBars(IndexPage)

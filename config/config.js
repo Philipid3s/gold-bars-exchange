@@ -1,6 +1,8 @@
 const appName = 'gold-bars-exchange'
 const databaseName = 'gold-bars'
-const serverPort = process.env.PORT || 3122
+const serverPort = process.env.PORT || 3000
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || `http://localhost:${serverPort}`
+const apiKey = process.env.NEXT_PUBLIC_API_KEY || ''
 
 const completeConfig = {
 
@@ -10,17 +12,18 @@ const completeConfig = {
     databaseUrl: process.env.MONGODB_URI || `mongodb://localhost/${databaseName}`,
     jsonOptions: {
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...(apiKey ? { 'x-api-key': apiKey } : {})
       }
     }
   },
 
   development: {
-    appUrl: `http://localhost:${serverPort}/`
+    appUrl: apiUrl
   },
 
   production: {
-    appUrl: `https://gold-bars-exchange.herokuapp.com/`
+    appUrl: process.env.APP_URL || `http://localhost:${serverPort}/`
   }
 
 }

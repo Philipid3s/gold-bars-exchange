@@ -1,30 +1,24 @@
 // pages/_app.js
 import React from 'react'
 import { Provider } from 'react-redux'
-import App, { Container } from 'next/app'
-import withRedux from 'next-redux-wrapper'
-import { makeStore } from '../redux/reduxApi.js'
+import { wrapper } from '../redux/reduxApi.js'
+import { ThemeProvider } from '@mui/material/styles'
+import CssBaseline from '@mui/material/CssBaseline'
+import theme from '../lib/theme'
+import AppLayout from '../components/AppLayout'
 
-class MyApp extends App {
-  static async getInitialProps ({ Component, ctx }) {
-    return {
-      pageProps: {
-        // Call page-level getInitialProps
-        ...(Component.getInitialProps ? await Component.getInitialProps(ctx) : {})
-      }
-    }
-  }
-
-  render () {
-    const { Component, pageProps, store } = this.props
-    return (
-      <Container>
-        <Provider store={store}>
-          <Component {...pageProps} />
-        </Provider>
-      </Container>
-    )
-  }
+function MyApp({ Component, ...rest }) {
+  const { store, props } = wrapper.useWrappedStore(rest)
+  return (
+    <Provider store={store}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AppLayout>
+          <Component {...props.pageProps} />
+        </AppLayout>
+      </ThemeProvider>
+    </Provider>
+  )
 }
 
-export default withRedux(makeStore, { debug: false })(MyApp)
+export default wrapper.withRedux(MyApp)
