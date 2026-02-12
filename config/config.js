@@ -1,8 +1,10 @@
 const appName = 'gold-bars-exchange'
 const databaseName = 'gold-bars'
 const serverPort = process.env.PORT || 3000
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || `http://localhost:${serverPort}`
-const apiKey = process.env.NEXT_PUBLIC_API_KEY || ''
+const explicitApiUrl = process.env.NEXT_PUBLIC_API_URL
+const isBrowser = typeof window !== 'undefined'
+const apiUrl = explicitApiUrl || (isBrowser ? '' : `http://localhost:${serverPort}`)
+const apiKey = process.env.NEXT_PUBLIC_API_KEY || process.env.API_KEY || ''
 
 const completeConfig = {
 

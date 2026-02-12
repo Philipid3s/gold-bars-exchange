@@ -2,6 +2,7 @@ import dbConnect from '../../../../lib/mongoose'
 import GoldBar from '../../../../models/GoldBar'
 
 function requireApiKey (req, res) {
+  if (req.method === 'GET') return true
   const required = process.env.API_KEY
   if (!required) return true
   const provided = req.headers['x-api-key']

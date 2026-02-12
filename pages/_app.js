@@ -21,4 +21,4 @@ function MyApp({ Component, ...rest }) {
   )
 }
 
-export default wrapper.withRedux(MyApp)
+export default MyApp

@@ -96,6 +96,12 @@ class StatusPage extends Component {
           description='Wallet and chain status'
         />
 
+        <p>
+          <button type="button" onClick={() => { window.location.href = '/' }}>
+            Return to exchange
+          </button>
+        </p>
+
         <h2>Wallet / Chain Status</h2>
 
         {error && <p>{error}</p>}

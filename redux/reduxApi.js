@@ -20,6 +20,9 @@ const apiTransformer = function (data, prevData, action) {
     case 'DELETE':
       return _(prevData).filter(oldData => oldData._id === data._id ? undefined : oldData).compact().value()
     default:
+      if (Array.isArray(data?.items)) {
+        return data.items
+      }
       return transformers.array.call(this, data, prevData, action)
   }
 }

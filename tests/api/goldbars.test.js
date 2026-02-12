@@ -85,8 +85,16 @@ describe('API /api/v1/goldbars', () => {
       .expect(200)
   })
 
-  it('rejects unauthorized requests', async () => {
+  it('rejects unauthorized write requests', async () => {
     const listServerInstance = createServer(listHandler)
-    await request(listServerInstance).get('/api/v1/goldbars').expect(401)
+    await request(listServerInstance)
+      .post('/api/v1/goldbars')
+      .send({
+        contract: '0xunauth',
+        owner: '0xowner',
+        reference: 'REF-UNAUTH',
+        askingPrice: 123
+      })
+      .expect(401)
   })
 })
