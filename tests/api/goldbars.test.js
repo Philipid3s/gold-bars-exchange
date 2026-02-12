@@ -10,9 +10,42 @@ import idHandler from '../../pages/api/v1/goldbars/[id]'
 let mongo
 
 function createServer (handler, query = {}) {
-  return http.createServer((req, res) => {
+  return http.createServer(async (req, res) => {
     req.query = query
-    handler(req, res)
+    // Minimal Next.js-like response helpers
+    res.status = (code) => {
+      res.statusCode = code
+      return res
+    }
+    res.json = (payload) => {
+      if (!res.getHeader('Content-Type')) {
+        res.setHeader('Content-Type', 'application/json')
+      }
+      res.end(JSON.stringify(payload))
+    }
+    // Minimal JSON body parser
+    let body = ''
+    req.on('data', (chunk) => {
+      body += chunk
+    })
+    req.on('end', async () => {
+      if (body) {
+        const contentType = req.headers['content-type'] || ''
+        if (contentType.includes('application/json')) {
+          try {
+            req.body = JSON.parse(body)
+          } catch (err) {
+            res.status(400).json({ message: 'Invalid JSON' })
+            return
+          }
+        } else {
+          req.body = body
+        }
+      } else {
+        req.body = {}
+      }
+      await handler(req, res)
+    })
   })
 }
 
