@@ -62,11 +62,25 @@ npm run dev
 
 API: `http://localhost:3000/api/v1/goldbars`
 
-## Mongo via Docker
+## Docker (Dev)
 
 ```bash
 docker compose up --build
 ```
+
+Uses `docker-compose.yml` and runs `npm run dev`.
+
+## Docker (Prod)
+
+Create `.env.production` at project root, then:
+
+```bash
+docker compose -f docker-compose.prod.yml up --build
+```
+
+Uses `Dockerfile` (multi-stage) and runs `npm run build` + `npm run start`.
+
+## Mongo via Docker
 
 MongoDB: `mongodb://localhost:27017`
 
