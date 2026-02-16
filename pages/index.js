@@ -7,25 +7,33 @@ import { encodeDeployData } from 'viem'
 import { goldBarAbi, goldBarBytecode } from '../contracts/goldbar'
 import { networks } from '../contracts/networks'
 
-// import { Link } from '../server/routes.js'
 import PageHead from '../components/PageHead'
 import Link from 'next/link'
 import GoldBarItem from '../components/GoldBarItem'
 import WalletBanner from '../components/WalletBanner'
+import HelpDialog from '../components/HelpDialog'
 
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import TableCell from '@mui/material/TableCell';
-import Button from '@mui/material/Button';
-import Input from '@mui/material/Input';
-import Icon from '@mui/material/Icon';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Divider from '@mui/material/Divider';
-import Alert from '@mui/material/Alert';
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
+import TableCell from '@mui/material/TableCell'
+import TablePagination from '@mui/material/TablePagination'
+import Button from '@mui/material/Button'
+import TextField from '@mui/material/TextField'
+import InputAdornment from '@mui/material/InputAdornment'
+import Icon from '@mui/material/Icon'
+import Typography from '@mui/material/Typography'
+import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
+import Divider from '@mui/material/Divider'
+import Alert from '@mui/material/Alert'
+import Snackbar from '@mui/material/Snackbar'
+import CircularProgress from '@mui/material/CircularProgress'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
 
 const contractABI = goldBarAbi
 
@@ -77,14 +85,14 @@ class IndexPage extends Component {
 
   constructor (props) {
     super(props)
-    this.state = { 
+    this.state = {
       contract: '',
 
       account: '',
       etherscan: '',
 
       reference: '',
-      askingPrice: 0,
+      askingPrice: '',
 
       isLoggedIn: false,
       walletClient: null,
@@ -93,8 +101,41 @@ class IndexPage extends Component {
       chainOk: false,
       walletStatus: 'unknown',
       readonly: false,
-      addGoldBarError: ''
+      addGoldBarError: '',
+      inProgress: false,
+
+      // Snackbar
+      snackbarOpen: false,
+      snackbarMessage: '',
+      snackbarSeverity: 'success',
+
+      // Offer dialog
+      offerDialogOpen: false,
+      offerDialogGoldbar: null,
+      offerDialogIndex: null,
+      offerDialogId: null,
+      offerValue: '',
+
+      // Pagination
+      page: 0,
+      rowsPerPage: 10
     }
+  }
+
+  showSnackbar (message, severity = 'success') {
+    this.setState({ snackbarOpen: true, snackbarMessage: message, snackbarSeverity: severity })
+  }
+
+  handleCloseSnackbar () {
+    this.setState({ snackbarOpen: false })
+  }
+
+  handleChangePage (event, newPage) {
+    this.setState({ page: newPage })
+  }
+
+  handleChangeRowsPerPage (event) {
+    this.setState({ rowsPerPage: parseInt(event.target.value, 10), page: 0 })
   }
 
   getActionGuardStatus () {
@@ -115,15 +156,15 @@ class IndexPage extends Component {
 
   showActionGuardMessage (reason) {
     if (reason === 'readonly') {
-      window.alert('Readonly mode enabled. Disable it to perform actions.')
+      this.showSnackbar('Readonly mode enabled. Disable it to perform actions.', 'warning')
       return
     }
     if (reason === 'wrong_chain') {
-      window.alert('Wrong network. Please switch to Polygon Amoy.')
+      this.showSnackbar('Wrong network. Please switch to Polygon Amoy.', 'warning')
       return
     }
     if (reason === 'no_wallet') {
-      window.alert('Please connect your wallet.')
+      this.showSnackbar('Please connect your wallet.', 'warning')
     }
   }
 
@@ -275,18 +316,18 @@ class IndexPage extends Component {
 
     if (!ref) {
       this.setState({ addGoldBarError: 'Reference is required.' })
-      window.alert('Please enter a gold bar reference before deploying.')
+      this.showSnackbar('Please enter a gold bar reference before deploying.', 'warning')
       return
     }
 
     if (price === '' || Number(price) <= 0) {
       this.setState({ addGoldBarError: 'Asking price must be greater than 0.' })
-      window.alert('Please enter a valid asking price greater than 0.')
+      this.showSnackbar('Please enter a valid asking price greater than 0.', 'warning')
       return
     }
 
     const data = goldBarBytecode
-    
+
     this.setState({ inProgress: true, addGoldBarError: '' })
 
     const { walletClient, publicClient } = this.state
@@ -465,7 +506,7 @@ class IndexPage extends Component {
           deployedCodeFound: Boolean(onchainCode && onchainCode !== '0x')
         })
 
-        const newGoldBar = { 
+        const newGoldBar = {
           contract: contractAddress,
           reference: ref,
           owner: this.state.account,
@@ -499,9 +540,10 @@ class IndexPage extends Component {
           throw new Error(persistData.message || `Persist failed with status ${persistResponse.status}`)
         }
 
-        await this.props.dispatch(reduxApi.actions.goldbars.sync())
-        this.setState( {contract: contractAddress})
-        this.setState({ reference: '', askingPrice: 0, inProgress: false, addGoldBarError: '' })
+        // Force re-fetch (not sync — sync skips if data is already loaded)
+        await this.props.dispatch(reduxApi.actions.goldbars())
+        this.setState({ contract: contractAddress, reference: '', askingPrice: '', inProgress: false, addGoldBarError: '', page: 0 })
+        this.showSnackbar('Gold bar deployed and listed successfully!')
       }
     } catch (error) {
       const walletError = this.parseWalletError(error)
@@ -519,12 +561,12 @@ class IndexPage extends Component {
           debug: this.buildErrorDebug(error)
         })
       }
-      window.alert(uiMessage)
+      this.showSnackbar(uiMessage, 'error')
       this.setState({ inProgress: false, addGoldBarError: uiMessage })
     }
   }
 
-  async handleMakeOffer (goldbar, index, goldbarId, event) {
+  handleOpenOfferDialog (goldbar, index, goldbarId, event) {
     const guard = this.getActionGuardStatus()
     if (!guard.ok) {
       this.showActionGuardMessage(guard.reason)
@@ -532,19 +574,37 @@ class IndexPage extends Component {
     }
 
     if (goldbar.state != "Available") {
-      window.alert('Gold bar not available.')
+      this.showSnackbar('Gold bar not available.', 'warning')
       return
     }
 
     if (this.state.account == goldbar.owner) {
-      window.alert("You are the owner, you can't make an offer.")
+      this.showSnackbar("You are the owner, you can't make an offer.", 'warning')
       return
     }
 
-    const offer = window.prompt('Your offer:', goldbar.askingPrice)
-    if (!offer) return
+    this.setState({
+      offerDialogOpen: true,
+      offerDialogGoldbar: goldbar,
+      offerDialogIndex: index,
+      offerDialogId: goldbarId,
+      offerValue: String(goldbar.askingPrice || '')
+    })
+  }
 
-    this.setState({ inProgress: true })
+  handleCloseOfferDialog () {
+    this.setState({ offerDialogOpen: false, offerDialogGoldbar: null, offerDialogIndex: null, offerDialogId: null, offerValue: '' })
+  }
+
+  async handleSubmitOffer () {
+    const { offerDialogGoldbar: goldbar, offerDialogIndex: index, offerDialogId: goldbarId, offerValue: offer } = this.state
+
+    if (!offer || Number(offer) <= 0) {
+      this.showSnackbar('Please enter a valid offer price.', 'warning')
+      return
+    }
+
+    this.setState({ offerDialogOpen: false, inProgress: true })
 
     const { walletClient, publicClient } = this.state
     if (!walletClient || !publicClient) {
@@ -572,10 +632,17 @@ class IndexPage extends Component {
       goldbar.state = "Offer Placed"
 
       this.props.dispatch(reduxApi.actions.goldbars.put({ id: goldbarId }, { body: JSON.stringify(goldbar) }, callbackWhenDone))
+      this.showSnackbar('Offer placed successfully!')
     } catch (error) {
+      const parsed = this.parseWalletError(error)
+      const severity = parsed.status === 'user_rejected' ? 'warning' : 'error'
+      const message = parsed.status === 'user_rejected' ? 'Transaction canceled in MetaMask.' : (error.message || 'Offer failed.')
       console.error(error.message || error)
+      this.showSnackbar(message, severity)
       this.setState({ inProgress: false })
     }
+
+    this.setState({ offerDialogGoldbar: null, offerDialogIndex: null, offerDialogId: null, offerValue: '' })
   }
 
   async handleAcceptOffer (goldbar, index, goldbarId, event) {
@@ -586,12 +653,12 @@ class IndexPage extends Component {
     }
 
     if (goldbar.state != "Offer Placed") {
-      window.alert('No offer has been placed.')
+      this.showSnackbar('No offer has been placed.', 'warning')
       return
     }
 
     if (this.state.account != goldbar.owner) {
-      window.alert("You are not the owner, you can't accept the offer.")
+      this.showSnackbar("You are not the owner, you can't accept the offer.", 'warning')
       return
     }
 
@@ -621,8 +688,13 @@ class IndexPage extends Component {
       goldbar.state = "Accepted"
 
       this.props.dispatch(reduxApi.actions.goldbars.put({ id: goldbarId }, { body: JSON.stringify(goldbar) }, callbackWhenDone))
+      this.showSnackbar('Offer accepted successfully!')
     } catch (error) {
+      const parsed = this.parseWalletError(error)
+      const severity = parsed.status === 'user_rejected' ? 'warning' : 'error'
+      const message = parsed.status === 'user_rejected' ? 'Transaction canceled in MetaMask.' : (error.message || 'Accept failed.')
       console.error(error.message || error)
+      this.showSnackbar(message, severity)
       this.setState({ inProgress: false })
     }
   }
@@ -635,12 +707,12 @@ class IndexPage extends Component {
     }
 
     if (goldbar.state != "Offer Placed") {
-      window.alert('No offer has been placed.')
+      this.showSnackbar('No offer has been placed.', 'warning')
       return
     }
 
     if (this.state.account != goldbar.owner) {
-      window.alert("You are not the owner, you can't reject the offer.")
+      this.showSnackbar("You are not the owner, you can't reject the offer.", 'warning')
       return
     }
 
@@ -671,10 +743,166 @@ class IndexPage extends Component {
       goldbar.buyer = ""
 
       this.props.dispatch(reduxApi.actions.goldbars.put({ id: goldbarId }, { body: JSON.stringify(goldbar) }, callbackWhenDone))
+      this.showSnackbar('Offer rejected successfully!')
     } catch (error) {
+      const parsed = this.parseWalletError(error)
+      const severity = parsed.status === 'user_rejected' ? 'warning' : 'error'
+      const message = parsed.status === 'user_rejected' ? 'Transaction canceled in MetaMask.' : (error.message || 'Reject failed.')
       console.error(error.message || error)
+      this.showSnackbar(message, severity)
       this.setState({ inProgress: false })
     }
+  }
+
+  renderHeader () {
+    const { chainOk, chainId, walletStatus, readonly } = this.state
+    return (
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography variant="h4" gutterBottom>
+              <Icon color="primary">account_balance</Icon> Gold bars exchange
+            </Typography>
+            <Typography component="h6" gutterBottom>
+              Blockchain-Based Platform for the Physical Trade of Commodities
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 1 }}>
+            <HelpDialog />
+            <WalletBanner
+              walletStatus={walletStatus}
+              chainId={chainId}
+              chainOk={chainOk}
+              readonly={readonly}
+              onSwitchChain={this.handleSwitchChain.bind(this)}
+              onConnect={this.handleConnectWallet.bind(this)}
+              onDisconnect={this.handleDisconnectWallet.bind(this)}
+            />
+          </Box>
+        </Box>
+        <Divider sx={{ mt: 2 }} />
+      </Box>
+    )
+  }
+
+  renderWarnings () {
+    const { chainOk, readonly } = this.state
+    return (
+      <>
+        {!chainOk && (
+          <Typography variant="body2" color="error" gutterBottom>
+            Wrong network: please switch to Polygon Amoy to use actions.
+          </Typography>
+        )}
+        {readonly && (
+          <Typography variant="body2" color="textSecondary" gutterBottom>
+            Readonly mode enabled. Actions are disabled.
+          </Typography>
+        )}
+      </>
+    )
+  }
+
+  renderTable (goldbarsData, goldbarsList) {
+    const { page, rowsPerPage } = this.state
+    const isLoading = this.props.goldbars?.loading
+    const paginatedList = goldbarsList.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+
+    return (
+      <Box sx={{ mt: 2, position: 'relative' }}>
+        {(this.state.inProgress || isLoading) && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 1 }}>
+            <CircularProgress size={20} sx={{ mr: 1 }} />
+            <Typography variant="body2" color="textSecondary">
+              {this.state.inProgress ? 'Transaction in progress...' : 'Loading...'}
+            </Typography>
+          </Box>
+        )}
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Gold bar reference</TableCell>
+              <TableCell>Owner</TableCell>
+              <TableCell>Buyer</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell align-right="true">Ask Price</TableCell>
+              <TableCell align-right="true">Last Offer</TableCell>
+              <TableCell>actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {paginatedList}
+          </TableBody>
+        </Table>
+        {goldbarsData.length > 5 && (
+          <TablePagination
+            component="div"
+            count={goldbarsData.length}
+            page={page}
+            onPageChange={this.handleChangePage.bind(this)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={this.handleChangeRowsPerPage.bind(this)}
+            rowsPerPageOptions={[5, 10, 25]}
+            labelRowsPerPage="Rows per page:"
+          />
+        )}
+      </Box>
+    )
+  }
+
+  renderSnackbar () {
+    return (
+      <Snackbar
+        open={this.state.snackbarOpen}
+        autoHideDuration={5000}
+        onClose={this.handleCloseSnackbar.bind(this)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={this.handleCloseSnackbar.bind(this)}
+          severity={this.state.snackbarSeverity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {this.state.snackbarMessage}
+        </Alert>
+      </Snackbar>
+    )
+  }
+
+  renderOfferDialog () {
+    const { offerDialogOpen, offerDialogGoldbar, offerValue } = this.state
+    return (
+      <Dialog open={offerDialogOpen} onClose={this.handleCloseOfferDialog.bind(this)} maxWidth="xs" fullWidth>
+        <DialogTitle>Make an Offer</DialogTitle>
+        <DialogContent>
+          {offerDialogGoldbar && (
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+              Gold bar: <strong>{offerDialogGoldbar.reference}</strong> — Asking price: <strong>{offerDialogGoldbar.askingPrice}</strong>
+            </Typography>
+          )}
+          <TextField
+            autoFocus
+            fullWidth
+            label="Your offer"
+            type="number"
+            variant="outlined"
+            size="small"
+            value={offerValue}
+            onChange={(e) => this.setState({ offerValue: e.target.value })}
+            onKeyDown={(e) => { if (e.key === 'Enter') this.handleSubmitOffer() }}
+            InputProps={{
+              endAdornment: <InputAdornment position="end">USD</InputAdornment>
+            }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={this.handleCloseOfferDialog.bind(this)} size="small">Cancel</Button>
+          <Button onClick={this.handleSubmitOffer.bind(this)} variant="contained" size="small">Submit Offer</Button>
+        </DialogActions>
+      </Dialog>
+    )
   }
 
   render () {
@@ -694,7 +922,7 @@ class IndexPage extends Component {
       : (Array.isArray(goldbars?.data?.items) ? goldbars.data.items : [])
 
     const goldbarsList = goldbarsData
-      ? goldbarsData.map((goldbar, index) => 
+      ? goldbarsData.map((goldbar, index) =>
         <GoldBarItem
           key={index}
           goldbar={goldbar}
@@ -702,14 +930,14 @@ class IndexPage extends Component {
           inProgress={this.state.inProgress}
           actionsDisabled={actionsDisabled}
           disabledReason={disabledReason}
-          handleMakeOffer={this.handleMakeOffer.bind(this, goldbar)}
+          handleMakeOffer={this.handleOpenOfferDialog.bind(this, goldbar)}
           handleAcceptOffer={this.handleAcceptOffer.bind(this, goldbar)}
           handleRejectOffer={this.handleRejectOffer.bind(this, goldbar)}
         />
       )
       : []
 
-      
+
     if (isLoggedIn) {
       return <main>
       <PageHead
@@ -717,38 +945,8 @@ class IndexPage extends Component {
         description='Gold bars exchange platform'
       />
 
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-          <Box>
-            <Typography variant="h4" gutterBottom>
-              <Icon color="primary">account_balance</Icon> Gold bars exchange
-            </Typography>
-            <Typography component="h6" gutterBottom>
-              Blockchain-Based Platform for the Physical Trade of Commodities
-            </Typography>
-          </Box>
-          <WalletBanner
-            walletStatus={walletStatus}
-            chainId={chainId}
-            chainOk={chainOk}
-            readonly={readonly}
-            onSwitchChain={this.handleSwitchChain.bind(this)}
-            onConnect={this.handleConnectWallet.bind(this)}
-            onDisconnect={this.handleDisconnectWallet.bind(this)}
-          />
-        </Box>
-        <Divider sx={{ mt: 2 }} />
-      </Box>
-      {!chainOk && (
-        <Typography variant="body2" color="error" gutterBottom>
-          Wrong network: please switch to Polygon Amoy to use actions.
-        </Typography>
-      )}
-      {readonly && (
-        <Typography variant="body2" color="textSecondary" gutterBottom>
-          Readonly mode enabled. Actions are disabled.
-        </Typography>
-      )}
+      {this.renderHeader()}
+      {this.renderWarnings()}
 
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" gutterBottom>
@@ -764,24 +962,7 @@ class IndexPage extends Component {
         {' '}| <Link href="/status">wallet/chain status</Link>
       </Typography>
 
-      <Box sx={{ mt: 2 }}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Gold bar reference</TableCell>
-            <TableCell>Owner</TableCell>
-            <TableCell>Buyer</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell align-right="true">Ask Price</TableCell>
-            <TableCell align-right="true">Last Offer</TableCell>
-            <TableCell>actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {goldbarsList}
-        </TableBody>
-      </Table>
-      </Box>
+      {this.renderTable(goldbarsData, goldbarsList)}
 
       <Box sx={{ mt: 3 }}>
         <Typography variant="h6" gutterBottom>
@@ -793,18 +974,41 @@ class IndexPage extends Component {
           </Alert>
         )}
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
-          <Input className="inputText" placeholder='Enter a gold bar reference' value={this.state.reference} onChange={this.handleChangeInputReference.bind(this)} disabled={this.state.inProgress} />
-          <Input className="inputText" type="number" value={this.state.askingPrice} onChange={this.handleChangeInputAskingPrice.bind(this)} disabled={this.state.inProgress} />
+          <TextField
+            label="Gold bar reference"
+            placeholder="e.g. serial number"
+            variant="outlined"
+            size="small"
+            value={this.state.reference}
+            onChange={this.handleChangeInputReference.bind(this)}
+            disabled={this.state.inProgress}
+          />
+          <TextField
+            label="Asking Price"
+            type="number"
+            variant="outlined"
+            size="small"
+            value={this.state.askingPrice}
+            onChange={this.handleChangeInputAskingPrice.bind(this)}
+            disabled={this.state.inProgress}
+            InputProps={{
+              endAdornment: <InputAdornment position="end">USD</InputAdornment>
+            }}
+          />
           <Button
             variant="contained"
             color="primary"
             onClick={this.handleAdd.bind(this)}
             disabled={this.state.inProgress || actionsDisabled}
+            startIcon={this.state.inProgress ? <CircularProgress size={18} color="inherit" /> : null}
           >
-            Add gold bar
+            {this.state.inProgress ? 'Deploying...' : 'Add gold bar'}
           </Button>
         </Stack>
       </Box>
+
+      {this.renderOfferDialog()}
+      {this.renderSnackbar()}
     </main>
     }
     else
@@ -814,38 +1018,9 @@ class IndexPage extends Component {
         title='Gold bars exchange platform'
         description='Gold bars exchange platform'
       />
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-          <Box>
-            <Typography variant="h4" gutterBottom>
-              <Icon color="primary">account_balance</Icon> Gold bars exchange
-            </Typography>
-            <Typography component="h6" gutterBottom>
-              Blockchain-Based Platform for the Physical Trade of Commodities
-            </Typography>
-          </Box>
-          <WalletBanner
-            walletStatus={walletStatus}
-            chainId={chainId}
-            chainOk={chainOk}
-            readonly={readonly}
-            onSwitchChain={this.handleSwitchChain.bind(this)}
-            onConnect={this.handleConnectWallet.bind(this)}
-            onDisconnect={this.handleDisconnectWallet.bind(this)}
-          />
-        </Box>
-        <Divider sx={{ mt: 2 }} />
-      </Box>
-      {!chainOk && (
-        <Typography variant="body2" color="error" gutterBottom>
-          Wrong network: please switch to Polygon Amoy to use actions.
-        </Typography>
-      )}
-      {readonly && (
-        <Typography variant="body2" color="textSecondary" gutterBottom>
-          Readonly mode enabled. Actions are disabled.
-        </Typography>
-      )}
+
+      {this.renderHeader()}
+      {this.renderWarnings()}
 
       <Box sx={{ mb: 2 }}>
         <Typography variant="h4" gutterBottom>
@@ -856,24 +1031,7 @@ class IndexPage extends Component {
         </Typography>
       </Box>
 
-      <Box sx={{ mt: 2, mb: 3 }}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Gold bar reference</TableCell>
-            <TableCell>Owner</TableCell>
-            <TableCell>Buyer</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell align-right="true">Ask Price</TableCell>
-            <TableCell align-right="true">Last Offer</TableCell>
-            <TableCell>actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {goldbarsList}
-        </TableBody>
-      </Table>
-      </Box>
+      {this.renderTable(goldbarsData, goldbarsList)}
 
       <p>Please, connect your Polygon account.</p>
       {walletStatus === 'locked' && <p>Wallet locked or no accounts. Unlock MetaMask and retry.</p>}
@@ -891,14 +1049,22 @@ class IndexPage extends Component {
           {' '}Readonly mode
         </label>
       </p>
+
+      {this.renderOfferDialog()}
+      {this.renderSnackbar()}
       </main>
     }
   };
 }
 
 IndexPage.getInitialProps = wrapper.getInitialPageProps((store) => async ({ query }) => {
-  const goldbars = await store.dispatch(reduxApi.actions.goldbars.sync())
-  return { goldbars, query }
+  try {
+    const goldbars = await store.dispatch(reduxApi.actions.goldbars.sync())
+    return { goldbars, query }
+  } catch (err) {
+    console.error('[getInitialProps] Failed to fetch goldbars:', err?.message || err)
+    return { goldbars: { data: [] }, query }
+  }
 })
 
 export default withGoldBars(IndexPage)

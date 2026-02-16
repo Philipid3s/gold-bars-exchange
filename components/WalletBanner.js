@@ -7,7 +7,7 @@ const WalletBanner = ({
   onConnect,
   onDisconnect
 }) => (
-  <div style={{ padding: '0.6em', marginBottom: '1em', border: '1px solid #ddd', background: '#fafafa' }}>
+  <div style={{ padding: '0.6em', border: '1px solid #ddd', background: '#fafafa', height: '100%', boxSizing: 'border-box' }}>
     <strong>Wallet:</strong> {walletStatus} | <strong>Chain:</strong> {chainId || 'n/a'} {chainOk ? '(Amoy)' : '(wrong)'}
     {readonly && <span style={{ marginLeft: '0.5em', color: '#555' }}>(readonly)</span>}
     {!chainOk && (

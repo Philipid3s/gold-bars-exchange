@@ -7,6 +7,8 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Copy .env.production so Next.js can inline NEXT_PUBLIC_* vars at build time
+COPY .env.production .env.production
 RUN npm run build
 
 FROM node:18-alpine AS prod-deps
