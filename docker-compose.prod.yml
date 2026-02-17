@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   mongo:
     image: mongo:6
@@ -13,10 +12,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    env_file:
-      - .env.production
     environment:
       - MONGODB_URI=mongodb://mongo:27017/gold-bars
+      - API_KEY=${API_KEY:-change-me}
     depends_on:
       - mongo
 volumes:
