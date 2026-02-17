@@ -4,6 +4,9 @@ on:
   push:
     branches: [ "master" ]
 
+env:
+  DOCKERHUB_USERNAME: philipid3s
+  
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
