@@ -7,6 +7,7 @@ services:
     volumes:
       - mongo-data:/data/db
   app:
+    image: philipid3s/gold-bars-exchange-app
     build:
       context: .
       dockerfile: Dockerfile
