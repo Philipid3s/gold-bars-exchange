@@ -3,7 +3,6 @@ name: Docker Image CI
 on:
   push:
     branches: [ "master" ]
-<<<<<<< HEAD
 
 jobs:
   build-and-push:
@@ -14,7 +13,7 @@ jobs:
 
       - name: Create .env.production for build
         run: |
-          cat <<EOF > .env.production
+          cat <<'EOF' > .env.production
           API_KEY=${{ secrets.API_KEY }}
           NEXT_PUBLIC_API_KEY=${{ secrets.NEXT_PUBLIC_API_KEY }}
           NEXT_PUBLIC_RPC_URL=${{ secrets.NEXT_PUBLIC_RPC_URL }}
@@ -35,18 +34,3 @@ jobs:
           tags: |
             philipid3s/gold-bars-exchange-app:latest
             philipid3s/gold-bars-exchange-app:${{ github.sha }}
-=======
-  pull_request:
-    branches: [ "master" ]
-
-jobs:
-
-  build:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
->>>>>>> 0bab9e85af77e1623f8a553866b88be11e430a94
