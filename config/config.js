@@ -25,7 +25,8 @@ const completeConfig = {
   },
 
   production: {
-    appUrl: process.env.APP_URL || `http://localhost:${serverPort}/`
+    // In the browser, always use relative URLs to avoid leaking localhost from build env.
+    appUrl: isBrowser ? '' : (process.env.APP_URL || `http://localhost:${serverPort}/`)
   }
 
 }
