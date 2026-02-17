@@ -1,20 +1,7 @@
 import dbConnect from '../../../../lib/mongoose'
 import GoldBar from '../../../../models/GoldBar'
 
-function requireApiKey (req, res) {
-  if (req.method === 'GET') return true
-  const required = process.env.API_KEY
-  if (!required) return true
-  const provided = req.headers['x-api-key']
-  if (provided !== required) {
-    res.status(401).json({ message: 'Unauthorized' })
-    return false
-  }
-  return true
-}
-
 export default async function handler (req, res) {
-  if (!requireApiKey(req, res)) return
   await dbConnect()
 
   const { id } = req.query

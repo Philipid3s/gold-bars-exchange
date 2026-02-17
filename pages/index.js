@@ -516,9 +516,6 @@ class IndexPage extends Component {
           offerPrice: 0
         }
         const apiHeaders = { 'Content-Type': 'application/json' }
-        if (process.env.NEXT_PUBLIC_API_KEY) {
-          apiHeaders['x-api-key'] = process.env.NEXT_PUBLIC_API_KEY
-        }
         const persistResponse = await fetch('/api/v1/goldbars', {
           method: 'POST',
           headers: apiHeaders,
