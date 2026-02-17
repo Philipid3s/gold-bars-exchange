@@ -7,7 +7,7 @@ Blockchain-backed marketplace for physical gold bars. The UI lets users create l
 2. **State**: Redux + redux-api.
 3. **Blockchain**: viem + MetaMask.
 4. **Database**: MongoDB (Mongoose).
-5. **API**: Next.js API routes (`/pages/api`)
+5. **API**: Next.js API routes (`/pages/api`).
 
 ## Features
 1. Create and list gold bar listings.
