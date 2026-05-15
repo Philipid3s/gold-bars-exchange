@@ -2,6 +2,8 @@
 
 Blockchain-backed marketplace for physical gold bars. The UI lets users create listings, make offers, accept or reject offers, and stores metadata in MongoDB via Next.js API routes. On-chain actions are executed through MetaMask on Polygon Amoy (testnet).
 
+
+
 ## Stack
 1. **Frontend**: Next.js 14, React 18, MUI v5.
 2. **State**: Redux + redux-api.
