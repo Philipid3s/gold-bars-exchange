@@ -90,7 +90,7 @@ const HelpDialog = () => {
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
           <Typography variant="h6" component="span" sx={{ fontWeight: 600 }}>
-            Gold Bars Exchange — Guide
+            Gold Bars Exchange - Guide
           </Typography>
           <IconButton onClick={() => setOpen(false)} size="small">
             <CloseIcon />
@@ -110,7 +110,7 @@ const HelpDialog = () => {
               audit trail while metadata (reference, owner, price) is stored in MongoDB for fast querying.
             </Typography>
             <Typography variant="body2">
-              This is a <strong>testnet prototype</strong> — no real funds or assets are involved.
+              This is a <strong>testnet prototype</strong> - no real funds or assets are involved.
               All transactions use free test tokens on Polygon Amoy.
             </Typography>
           </Section>
@@ -120,23 +120,23 @@ const HelpDialog = () => {
           {/* ── Workflow ── */}
           <Section title="Trading Workflow">
             <Step number="1">
-              <strong>Connect wallet</strong> — Click "Connect wallet" to link your MetaMask account.
+              <strong>Connect wallet</strong> - Click "Connect wallet" to link your MetaMask account.
               If you are on the wrong network, click "Switch to Amoy".
             </Step>
             <Step number="2">
-              <strong>List a gold bar</strong> — Fill in a reference (e.g. serial number) and an asking price,
+              <strong>List a gold bar</strong> - Fill in a reference (e.g. serial number) and an asking price,
               then click "Add gold bar". MetaMask will prompt you to confirm the smart-contract deployment transaction.
             </Step>
             <Step number="3">
-              <strong>Make an offer</strong> — On a listing you do not own, click the offer icon and enter your
+              <strong>Make an offer</strong> - On a listing you do not own, click the offer icon and enter your
               price. This calls the <code>MakeOffer</code> function on the listing's contract.
             </Step>
             <Step number="4">
-              <strong>Accept or reject</strong> — The owner of the listing can accept or reject the pending
+              <strong>Accept or reject</strong> - The owner of the listing can accept or reject the pending
               offer via the corresponding action buttons, which call <code>AcceptOffer</code> or <code>Reject</code> on-chain.
             </Step>
             <Step number="5">
-              <strong>View status</strong> — The table updates in real time. Each row shows the current
+              <strong>View status</strong> - The table updates in real time. Each row shows the current
               state (Available, Offer Placed, Accepted), owner, buyer, prices, and action buttons.
             </Step>
           </Section>
@@ -160,7 +160,7 @@ const HelpDialog = () => {
 
             <Step number="2">
               <strong>Add the Polygon Amoy network</strong><br />
-              Open MetaMask → Settings → Networks → Add a network, then enter:
+              Open MetaMask, go to Settings, then Networks, then Add a network, and enter:
               <CodeBlock>
 {`Network Name:      Polygon Amoy Testnet
 RPC URL:           https://rpc-amoy.polygon.technology/

@@ -1,6 +1,7 @@
 import { Component } from 'react'
 
 import reduxApi, { withGoldBars, wrapper } from '../redux/reduxApi.js'
+import { config } from '../config/config'
 
 import { createViemClients, ensureAmoyChain } from '../lib/viem'
 import { encodeDeployData } from 'viem'
@@ -18,6 +19,7 @@ import TableBody from '@mui/material/TableBody'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
 import TablePagination from '@mui/material/TablePagination'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
@@ -515,10 +517,9 @@ class IndexPage extends Component {
           buyer: '',
           offerPrice: 0
         }
-        const apiHeaders = { 'Content-Type': 'application/json' }
         const persistResponse = await fetch('/api/v1/goldbars', {
           method: 'POST',
-          headers: apiHeaders,
+          headers: config.jsonOptions.headers,
           body: JSON.stringify(newGoldBar)
         })
         const persistData = await persistResponse.json().catch(() => ({}))
@@ -537,7 +538,7 @@ class IndexPage extends Component {
           throw new Error(persistData.message || `Persist failed with status ${persistResponse.status}`)
         }
 
-        // Force re-fetch (not sync — sync skips if data is already loaded)
+        // Force re-fetch (not sync - sync skips if data is already loaded)
         await this.props.dispatch(reduxApi.actions.goldbars())
         this.setState({ contract: contractAddress, reference: '', askingPrice: '', inProgress: false, addGoldBarError: '', page: 0 })
         this.showSnackbar('Gold bar deployed and listed successfully!')
@@ -815,22 +816,34 @@ class IndexPage extends Component {
             </Typography>
           </Box>
         )}
-        <Table>
+        <TableContainer sx={{ overflowX: 'auto' }}>
+          <Table sx={{ minWidth: 820 }}>
           <TableHead>
             <TableRow>
               <TableCell>Gold bar reference</TableCell>
               <TableCell>Owner</TableCell>
               <TableCell>Buyer</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell align-right="true">Ask Price</TableCell>
-              <TableCell align-right="true">Last Offer</TableCell>
+              <TableCell align="right">Ask Price</TableCell>
+              <TableCell align="right">Last Offer</TableCell>
               <TableCell>actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedList}
+            {paginatedList.length
+              ? paginatedList
+              : (
+                <TableRow>
+                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                    <Typography variant="body2" color="textSecondary">
+                      No gold bars listed yet.
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+                )}
           </TableBody>
-        </Table>
+          </Table>
+        </TableContainer>
         {goldbarsData.length > 5 && (
           <TablePagination
             component="div"
@@ -875,7 +888,7 @@ class IndexPage extends Component {
         <DialogContent>
           {offerDialogGoldbar && (
             <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-              Gold bar: <strong>{offerDialogGoldbar.reference}</strong> — Asking price: <strong>{offerDialogGoldbar.askingPrice}</strong>
+              Gold bar: <strong>{offerDialogGoldbar.reference}</strong> - Asking price: <strong>{offerDialogGoldbar.askingPrice}</strong>
             </Typography>
           )}
           <TextField
