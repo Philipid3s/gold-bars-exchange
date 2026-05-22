@@ -9,9 +9,13 @@ export default async function handler (req, res) {
   const { id } = req.query
 
   if (req.method === 'GET') {
-    const item = await GoldBar.findById(id).lean()
-    if (!item) return res.status(404).json({ message: 'Not found' })
-    return res.status(200).json(item)
+    try {
+      const item = await GoldBar.findById(id).lean()
+      if (!item) return res.status(404).json({ message: 'Not found' })
+      return res.status(200).json(item)
+    } catch (err) {
+      return res.status(400).json({ message: err.message || 'Bad request' })
+    }
   }
 
   if (req.method === 'PUT') {
@@ -28,9 +32,13 @@ export default async function handler (req, res) {
   }
 
   if (req.method === 'DELETE') {
-    const deleted = await GoldBar.findByIdAndDelete(id).lean()
-    if (!deleted) return res.status(404).json({ message: 'Not found' })
-    return res.status(200).json({ _id: id })
+    try {
+      const deleted = await GoldBar.findByIdAndDelete(id).lean()
+      if (!deleted) return res.status(404).json({ message: 'Not found' })
+      return res.status(200).json({ _id: id })
+    } catch (err) {
+      return res.status(400).json({ message: err.message || 'Bad request' })
+    }
   }
 
   res.setHeader('Allow', ['GET', 'PUT', 'DELETE'])

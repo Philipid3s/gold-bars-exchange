@@ -4,6 +4,8 @@ const serverPort = process.env.PORT || 3000
 const explicitApiUrl = process.env.NEXT_PUBLIC_API_URL
 const isBrowser = typeof window !== 'undefined'
 const apiUrl = explicitApiUrl || (isBrowser ? '' : `http://localhost:${serverPort}`)
+// NEXT_PUBLIC_API_KEY is embedded at build time and available in the browser.
+// API_KEY is server-only; set NEXT_PUBLIC_API_KEY for browser requests to carry x-api-key.
 const apiKey = process.env.NEXT_PUBLIC_API_KEY || process.env.API_KEY || ''
 
 const completeConfig = {

@@ -43,11 +43,15 @@ const GoldBarItem = ({
 }) => (
     <TableRow key={index} className={inProgress === goldbar._id ? 'inProgress' : ''}>
       <TableCell component="th" scope="row">
-        <Tooltip title={goldbar.contract || ''}>
-          <a href={explorerUrl(goldbar.contract)} target="_blank" rel="noopener noreferrer">
-            {goldbar.reference}
-          </a>
-        </Tooltip>
+        {goldbar.contract
+          ? (
+            <Tooltip title={goldbar.contract}>
+              <a href={explorerUrl(goldbar.contract)} target="_blank" rel="noopener noreferrer">
+                {goldbar.reference}
+              </a>
+            </Tooltip>
+            )
+          : goldbar.reference}
       </TableCell>
 
       <TableCell>
