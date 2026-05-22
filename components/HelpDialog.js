@@ -8,12 +8,18 @@ import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import Divider from '@mui/material/Divider'
+import Alert from '@mui/material/Alert'
+import Chip from '@mui/material/Chip'
 import CloseIcon from '@mui/icons-material/Close'
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
+import BlockIcon from '@mui/icons-material/Block'
+import LoopIcon from '@mui/icons-material/Loop'
+import UndoIcon from '@mui/icons-material/Undo'
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
 
 const Section = ({ title, children }) => (
   <Box sx={{ mb: 3 }}>
-    <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+    <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
       {title}
     </Typography>
     {children}
@@ -43,6 +49,15 @@ const Step = ({ number, children }) => (
     <Box sx={{ flex: 1 }}>
       <Typography variant="body2" component="div">{children}</Typography>
     </Box>
+  </Box>
+)
+
+const Rule = ({ icon, children }) => (
+  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 1 }}>
+    <Box sx={{ color: 'text.secondary', mt: 0.1, flexShrink: 0 }}>
+      {icon}
+    </Box>
+    <Typography variant="body2">{children}</Typography>
   </Box>
 )
 
@@ -89,29 +104,32 @@ const HelpDialog = () => {
         scroll="paper"
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
-          <Typography variant="h6" component="span" sx={{ fontWeight: 600 }}>
-            Gold Bars Exchange - Guide
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="h6" component="span" sx={{ fontWeight: 600 }}>
+              Gold Bars Exchange - Guide
+            </Typography>
+            <Chip label="Testnet" size="small" color="warning" variant="outlined" />
+          </Box>
           <IconButton onClick={() => setOpen(false)} size="small">
             <CloseIcon />
           </IconButton>
         </DialogTitle>
 
         <DialogContent dividers>
+
+          {/* ── Testnet notice ── */}
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            This is a <strong>prototype on Polygon Amoy testnet</strong>. No real funds or physical assets are involved.
+            All transactions use free test POL tokens. Prices are reference numbers only — no cryptocurrency is transferred between parties.
+          </Alert>
+
           {/* ── Objective ── */}
-          <Section title="Prototype Objective">
+          <Section title="What is this?">
             <Typography variant="body2" paragraph>
-              Gold Bars Exchange is a proof-of-concept demonstrating how physical commodity trading
-              (gold bars) can be secured and made transparent using blockchain technology.
-            </Typography>
-            <Typography variant="body2" paragraph>
-              Each gold bar listing deploys its own smart contract on Polygon Amoy (testnet).
-              Offers, acceptances, and rejections are recorded on-chain, providing an immutable
-              audit trail while metadata (reference, owner, price) is stored in MongoDB for fast querying.
-            </Typography>
-            <Typography variant="body2">
-              This is a <strong>testnet prototype</strong> - no real funds or assets are involved.
-              All transactions use free test tokens on Polygon Amoy.
+              Gold Bars Exchange demonstrates how physical commodity trading can be made transparent
+              using blockchain. Each gold bar listing deploys its own smart contract on Polygon Amoy.
+              Offers, acceptances, and rejections are recorded on-chain as an immutable audit trail,
+              while metadata (reference, owner, price) is stored in MongoDB for fast querying.
             </Typography>
           </Section>
 
@@ -124,22 +142,60 @@ const HelpDialog = () => {
               If you are on the wrong network, click "Switch to Amoy".
             </Step>
             <Step number="2">
-              <strong>List a gold bar</strong> - Fill in a reference (e.g. serial number) and an asking price,
-              then click "Add gold bar". MetaMask will prompt you to confirm the smart-contract deployment transaction.
+              <strong>List a gold bar</strong> - Fill in a reference (e.g. serial number) and an asking
+              price, then click "Add gold bar". MetaMask will prompt you to confirm the smart-contract
+              deployment transaction (gas fees in test POL apply).{' '}
+              <Typography variant="body2" component="span" sx={{ color: 'text.secondary' }}>
+                The price is a plain integer reference number, not an amount of cryptocurrency.
+              </Typography>
             </Step>
             <Step number="3">
-              <strong>Make an offer</strong> - On a listing you do not own, click the offer icon and enter your
-              price. This calls the <code>MakeOffer</code> function on the listing's contract.
+              <strong>Make an offer</strong> - On a listing you do not own with status <em>Available</em>,
+              click the offer icon and enter your price. This calls <code>MakeOffer</code> on the
+              listing's contract and sets its status to <em>Offer Placed</em>.
             </Step>
             <Step number="4">
-              <strong>Accept or reject</strong> - The owner of the listing can accept or reject the pending
-              offer via the corresponding action buttons, which call <code>AcceptOffer</code> or <code>Reject</code> on-chain.
+              <strong>Accept or reject</strong> - The listing owner can accept or reject the pending offer
+              via the action buttons. <strong>Accepting</strong> calls <code>AcceptOffer</code> and marks
+              the listing as <em>Accepted</em>. <strong>Rejecting</strong> calls <code>Reject</code>,
+              clears the buyer and offer price, and resets the listing back to <em>Available</em> so new
+              offers can be made.
             </Step>
             <Step number="5">
-              <strong>View status</strong> - The table updates in real time. Each row shows the current
-              state (Available, Offer Placed, Accepted), owner, buyer, prices, and action buttons.
+              <strong>View status</strong> - The table refreshes after each action. Each row shows the
+              current state, owner, buyer, prices, and available action buttons.
             </Step>
           </Section>
+
+          {/* ── Rules callout ── */}
+          <Box
+            sx={{
+              bgcolor: 'grey.50',
+              border: '1px solid',
+              borderColor: 'grey.200',
+              borderLeft: '4px solid',
+              borderLeftColor: 'primary.main',
+              borderRadius: 1,
+              p: 2,
+              mb: 3
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>
+              Rules at a glance
+            </Typography>
+            <Rule icon={<BlockIcon fontSize="small" />}>
+              You cannot make an offer on your own listing.
+            </Rule>
+            <Rule icon={<LoopIcon fontSize="small" />}>
+              Only one offer can be active at a time. The owner must reject it before a new offer can be placed.
+            </Rule>
+            <Rule icon={<UndoIcon fontSize="small" />}>
+              Rejecting an offer resets the listing to <em>Available</em> and clears the buyer.
+            </Rule>
+            <Rule icon={<AttachMoneyIcon fontSize="small" />}>
+              Prices are reference numbers only — no cryptocurrency is transferred between parties.
+            </Rule>
+          </Box>
 
           <Divider sx={{ mb: 3 }} />
 
@@ -198,6 +254,7 @@ Block Explorer:    https://amoy.polygonscan.com/`}
               in the header and you can start creating listings and trading.
             </Step>
           </Section>
+
         </DialogContent>
 
         <DialogActions sx={{ px: 3, py: 1.5 }}>
