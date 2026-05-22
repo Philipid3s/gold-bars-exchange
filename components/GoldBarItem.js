@@ -35,12 +35,20 @@ const GoldBarItem = ({
   goldbar,
   index,
   inProgress,
+  anyTxInProgress,
   handleMakeOffer,
   handleAcceptOffer,
   handleRejectOffer,
   actionsDisabled,
   disabledReason
-}) => (
+}) => {
+  const buttonDisabled = actionsDisabled || anyTxInProgress
+  const tooltipReason = anyTxInProgress ? 'Transaction in progress…' : disabledReason
+
+  const showOffer = !goldbar.state || goldbar.state === 'Available'
+  const showAcceptReject = goldbar.state === 'Offer Placed'
+
+  return (
     <TableRow key={index} className={inProgress === goldbar._id ? 'inProgress' : ''}>
       <TableCell component="th" scope="row">
         {goldbar.contract
@@ -71,31 +79,57 @@ const GoldBarItem = ({
       </TableCell>
 
       <TableCell align="right">
-        {goldbar.offerPrice}
+        {goldbar.offerPrice || '—'}
       </TableCell>
 
       <TableCell>
-          <Tooltip title={actionsDisabled ? disabledReason : 'Make offer'}>
+        {showOffer && (
+          <Tooltip title={buttonDisabled ? tooltipReason : 'Make offer'}>
             <span>
-              <IconButton size="small" color="primary" disabled={actionsDisabled} onClick={handleMakeOffer.bind(this, index, goldbar._id)}>
+              <IconButton
+                size="small"
+                color="primary"
+                disabled={buttonDisabled}
+                onClick={handleMakeOffer.bind(this, index, goldbar._id)}
+              >
                 <LocalOfferIcon fontSize="small" />
               </IconButton>
             </span>
           </Tooltip>
-          <Tooltip title={actionsDisabled ? disabledReason : 'Accept offer'}>
-            <span>
-              <IconButton size="small" color="primary" disabled={actionsDisabled} onClick={handleAcceptOffer.bind(this, index, goldbar._id)}>
-                <CheckIcon fontSize="small" />
-              </IconButton>
-            </span>
-          </Tooltip>
-          <Tooltip title={actionsDisabled ? disabledReason : 'Reject offer'}>
-            <span>
-              <IconButton size="small" color="secondary" disabled={actionsDisabled} onClick={handleRejectOffer.bind(this, index, goldbar._id)}>
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </span>
-          </Tooltip>
+        )}
+
+        {showAcceptReject && (
+          <>
+            <Tooltip title={buttonDisabled ? tooltipReason : 'Accept offer'}>
+              <span>
+                <IconButton
+                  size="small"
+                  color="success"
+                  disabled={buttonDisabled}
+                  onClick={handleAcceptOffer.bind(this, index, goldbar._id)}
+                >
+                  <CheckIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title={buttonDisabled ? tooltipReason : 'Reject offer'}>
+              <span>
+                <IconButton
+                  size="small"
+                  color="error"
+                  disabled={buttonDisabled}
+                  onClick={handleRejectOffer.bind(this, index, goldbar._id)}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </>
+        )}
+
+        {!showOffer && !showAcceptReject && (
+          <Typography variant="body2" color="text.secondary" sx={{ pl: 1 }}>—</Typography>
+        )}
       </TableCell>
 
       <style jsx>{`
@@ -107,6 +141,7 @@ const GoldBarItem = ({
         }
       `}</style>
     </TableRow>
-)
+  )
+}
 
 export default GoldBarItem
