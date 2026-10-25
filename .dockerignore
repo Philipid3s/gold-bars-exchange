@@ -7,6 +7,5 @@ docker-compose.yml
 docker-compose.prod.yml
 .env
 .env.*
-!.env.production
 tests
 docs

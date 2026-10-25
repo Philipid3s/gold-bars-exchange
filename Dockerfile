@@ -1,22 +1,28 @@
-FROM node:20-alpine AS deps
+# Node 22 is the maintained LTS that still tracks this app (Node 20 is EOL).
+ARG NODE_VERSION=22
+
+FROM node:${NODE_VERSION}-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 
-FROM node:20-alpine AS builder
+FROM node:${NODE_VERSION}-alpine AS builder
 WORKDIR /app
+# Public RPC endpoint only. The API key is not a build argument and is not
+# copied from env files; pass it when the container starts.
+ARG NEXT_PUBLIC_RPC_URL=https://rpc-amoy.polygon.technology/
+ENV NEXT_PUBLIC_RPC_URL=$NEXT_PUBLIC_RPC_URL
+ENV NEXT_PUBLIC_API_URL=
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Copy .env.production so Next.js can inline NEXT_PUBLIC_* vars at build time
-COPY .env.production .env.production
 RUN npm run build
 
-FROM node:20-alpine AS prod-deps
+FROM node:${NODE_VERSION}-alpine AS prod-deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install --omit=dev
 
-FROM node:20-alpine AS runner
+FROM node:${NODE_VERSION}-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000

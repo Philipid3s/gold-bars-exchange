@@ -118,6 +118,22 @@ describe('API /api/v1/goldbars', () => {
       .expect(200)
   })
 
+  it('creates a goldbar from a same-origin request without an api key', async () => {
+    const createServerInstance = createServer(listHandler)
+    await request(createServerInstance)
+      .post('/api/v1/goldbars')
+      .set('Host', '127.0.0.1:3000')
+      .set('Origin', 'http://127.0.0.1:3000')
+      .send({
+        contract: '0xsame',
+        owner: '0xowner',
+        reference: 'REF-SAME',
+        askingPrice: 150,
+        state: 'Available'
+      })
+      .expect(201)
+  })
+
   it('rejects unauthorized write requests', async () => {
     const listServerInstance = createServer(listHandler)
     await request(listServerInstance)

@@ -5,7 +5,7 @@ Blockchain-backed marketplace for physical gold bars. The UI lets users create l
 
 
 ## Stack
-1. **Frontend**: Next.js 14, React 18, MUI v5.
+1. **Frontend**: Next.js 16, React 18, MUI v5. Node.js 22.
 2. **State**: Redux + redux-api.
 3. **Blockchain**: viem + MetaMask.
 4. **Database**: MongoDB (Mongoose).
@@ -45,15 +45,15 @@ Create a root `.env`:
 ```env
 MONGODB_URI=mongodb://localhost/gold-bars
 API_KEY=change-me
-NEXT_PUBLIC_API_KEY=change-me
 NEXT_PUBLIC_RPC_URL=https://rpc-amoy.polygon.technology/
 NEXT_PUBLIC_API_URL=
 ```
 
 Notes:
-1. `API_KEY` secures API routes (server-side).
-2. `NEXT_PUBLIC_API_KEY` is sent by the frontend in `x-api-key`.
+1. `API_KEY` is server-only. Set it when the process starts (shell export, or the `app` service `environment` in Docker Compose). It is not a `NEXT_PUBLIC_*` variable and it is not passed as a Docker build argument.
+2. `NEXT_PUBLIC_API_KEY` has been removed. The browser does not send `x-api-key`. Same-origin writes from the UI (the PoC on port 3000) are allowed. Other clients must send header `x-api-key` with the runtime `API_KEY`.
 3. `NEXT_PUBLIC_API_URL` can be left empty to use same-origin API routes.
+4. `NEXT_PUBLIC_RPC_URL` is a public Polygon Amoy endpoint. It may be set at image build time. It is not a secret.
 
 ## Local Dev
 
@@ -74,13 +74,22 @@ Uses `docker-compose.yml` and runs `npm run dev`.
 
 ## Docker (Prod)
 
-Create `.env.production` at project root, then:
+Put runtime settings in a root `.env` (see `.env.example`). Do not create `.env.production` for the API key; env files are excluded from the image build.
 
 ```bash
 docker compose -f docker-compose.prod.yml up --build
 ```
 
-Uses `Dockerfile` (multi-stage) and runs `npm run build` + `npm run start`.
+Uses `Dockerfile` (multi-stage, Node 22) and runs `npm run build` + `npm run start`. `API_KEY` is passed into the running container only.
+
+## Upgrade notes (Next.js 14 → 16, Node 20 → 22)
+
+1. Node.js 20 is end of life. Images and `package.json` `engines` now require Node.js 22 (maintained LTS). Next.js 16 itself allows Node.js 20.9+, but this repo does not.
+2. Next.js 15 left maintenance on 21 Oct 2026. This app is on Next.js 16 (active LTS), still using the Pages Router and React 18. Next.js 16 prints a deprecation that React 18 support goes away in Next.js 17. React stays on 18 because `react-redux` 7 (used by the Pages UI) does not declare React 19 support.
+3. `next build` / `next dev` use Turbopack by default. This app has no custom webpack config.
+4. Removed Next.js 16 features that this app did not use: `next lint`, AMP, `middleware` (now `proxy`), and `serverRuntimeConfig` / `publicRuntimeConfig`.
+5. Deployers: drop `NEXT_PUBLIC_API_KEY`. Keep supplying `API_KEY` at container start. Rotate that key and delete Docker Hub tags built before this change; those tags contain the old key in client JavaScript. That cleanup is outside this repo.
+6. Next.js 16 warns that a root `static/` directory is deprecated in favor of `public/`. This version still serves `/static/app.css`, so the PoC stylesheet URL is unchanged.
 
 ## Mongo via Docker
 
