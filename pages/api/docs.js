@@ -3,7 +3,8 @@ export default function handler (req, res) {
     openapi: '3.0.0',
     info: {
       title: 'Gold Bars Exchange API',
-      version: '1.0.0'
+      version: '1.0.0',
+      description: 'Same-origin browser writes do not send a key. Other clients send header x-api-key matching the server runtime API_KEY.'
     },
     servers: [{ url: '/' }],
     components: {

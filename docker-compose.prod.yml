@@ -18,10 +18,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NODE_VERSION: "22"
+        NEXT_PUBLIC_RPC_URL: "${NEXT_PUBLIC_RPC_URL:-https://rpc-amoy.polygon.technology/}"
     ports:
       - "3000:3000"
     environment:
       - MONGODB_URI=mongodb://${MONGO_APP_USER}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_INITDB_DATABASE}
+      # Runtime only. The image build does not receive this value.
       - API_KEY=${API_KEY}
     depends_on:
       - mongo
